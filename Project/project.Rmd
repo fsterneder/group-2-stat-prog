@@ -1,0 +1,34 @@
+---
+title: "Baseball yay"
+subtitle: "Programming in Statistics - Project"
+author: "Vilsmeier Johannes, Florian Sterneder, Schaub Andrea"
+date: '`r Sys.Date()`'
+output:
+  html_document:
+    code_folding: show
+    theme: cosmo
+    highlight: tango
+    number_sections: true
+    toc: true
+    toc_float: yes
+    fig_width: 7
+    fig_height: 4.5
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(echo = TRUE,
+               collapse = FALSE,
+               comment = "",
+               strip.white = TRUE,
+               warning = FALSE,
+               messages = FALSE,
+               out.width = "70%",
+               fig.align = "center")
+```
+
+```{r include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(stringr)
+```
