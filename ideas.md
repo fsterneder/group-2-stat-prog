@@ -7,15 +7,15 @@ In human biology, handedness is a better, faster, or more precise performance or
 
 # Age
 
-Andrea: How old do baseball players get? (maybe grouping them in birthdecades, maybe difference to average people in U.S.)
-Andrea: How old are baseball players when they get into the Hall of Fame/get their first award?
-Andrea: What's the average age of playing for the first time (in each league)?
-Andrea: Development of the average age per league/team
+Andrea: How old do baseball players get? (maybe grouping them in birthdecades, maybe difference to average people in U.S.)  
+Andrea: How old are baseball players when they get into the Hall of Fame/get their first award?  
+Andrea: What's the average age of playing for the first time (in each league)?  
+Andrea: Development of the average age per league/team  
 
 # Batting 
 
-Andrea: Development of Homeruns, Stolen Base, ... (per game?) within the years.
-Andrea: Which player/team/league had the most Homeruns?
+Andrea: Development of Homeruns, Stolen Base, ... (per game?) within the years.  
+Andrea: Which player/team/league had the most Homeruns?  
 
 # Player Origin and Team
 
@@ -23,8 +23,8 @@ Andrea: How many players have played in the same state as where they are from? A
 
 # Teams
 
-Andrea: Which teams win? Where do they come from? Regional differences?
-Andrea: Development of best teams over time?
+Andrea: Which teams win? Where do they come from? Regional differences?  
+Andrea: Development of best teams over time?  
 
 # Salaries
 
