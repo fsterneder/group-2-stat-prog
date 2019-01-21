@@ -22,7 +22,8 @@ Andrea: Which player/team/league had the most Homeruns?
 
 Andrea: How many players have played in the same state as where they are from? Are there differences in the AL (Americal League)/NL (National League)? (merging CollegePlaying, SchoolsTable and Players) 
 
-J: What are the most "successful" schools/colleges in terms of awards won by players from these schools. We could also rank/sort schools by the number of Hall-of-Fame inductees they "produced". 
+J: What are the most "successful" schools/colleges in terms of awards won by players from these schools. We could also rank/sort schools by the number of Hall-of-Fame inductees they "produced".  
+
 J: States that produced the most baseball players, controlled for population size? 
 
 # Teams
