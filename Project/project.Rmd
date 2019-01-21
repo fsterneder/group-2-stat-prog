@@ -15,7 +15,7 @@ output:
     fig_height: 4.5
 ---
 
-```{r setup, include=FALSE}
+```{r hide=T, warning=F, message=F}
 library(knitr)
 opts_chunk$set(echo = TRUE,
                collapse = FALSE,
@@ -25,10 +25,25 @@ opts_chunk$set(echo = TRUE,
                messages = FALSE,
                out.width = "70%",
                fig.align = "center")
+library(tidyverse)
+library(zeallot)
+
+setup <- list()
+
+setup$files <- c("AllstarFull","Appearances","AwardsManagers","AwardsPlayers","AwardsShareManagers","AwardsSharePlayers","CollegePlaying","HallOfFame","Managers","ManagersHalf","People","Teams")
+
+# read all files from setup$files
+setup$data %<-% 
+  (map(setup$files, function(f){
+    return (read_csv(
+      paste("./data/",f,".csv",sep=""), col_names=T)
+    )})
+  )
+
+# assigns setup$data files the names of setup$files
+walk2(setup$files, setup$data, assign,envir=globalenv())
 ```
 
-```{r include=FALSE}
-library(tidyverse)
-library(lubridate)
-library(stringr)
+```{r}
+People
 ```
