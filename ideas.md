@@ -35,5 +35,6 @@ Andrea: Development of best teams over time?
 
 J: If possible, we could compute the difference between the average income of the general population of the US and the average income of the baseball players in our data set for each year and plot this difference as a function of time. Did this difference remain steady or increase over time?
 
+# All-Star Game(s)
 
-
+Andrea: We could analyze the All-Star Game Players and build a model to compute the ones for 2019 (as statistics for the new players are not out yet, we could compute the ones for 2018 (with data until 2017) and then compare it to the real data. 
