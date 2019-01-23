@@ -799,5 +799,16 @@ schoolID       school ID code
 year           year
 
 
-<end of file>
-	
+X. Addendum
+## Player positions defense  
+(https://de.wikipedia.org/wiki/Baseball#Positionen_der_Defensive, 2019/01/20)  
+
+P  - Pitcher (the one in the middle)  
+C  - Catcher (the one behind the batter)  
+1B - First  Baseman  
+2B - Second Baseman  
+3B - Third  Baseman  
+SS - Short Stop (next to Second Baseman)  
+LF - Left Fielder  
+CF - Center Fielder  
+RF - Right Fielder  
