@@ -31,7 +31,9 @@ Andrea: Development of best teams over time?
 
 # Salaries
 
-J: If possible, we could compute the difference between the average income of the general population of the US and the average income of the baseball players in our data set for each year and plot this difference as a function of time. Did this difference remain steady or increase over time?
+J: If possible, we could compute the difference between the average income of the general population of the US and the average income of the baseball players in our data set for each year and plot this difference as a function of time. Did this difference remain steady or increase over time?  
+
+Salary compared to other sports.
 
 # All-Star Game(s)
 
