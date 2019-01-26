@@ -25,10 +25,6 @@ opts_chunk$set(echo = TRUE,
                messages = FALSE,
                out.width = "70%",
                fig.align = "center")
-library(tidyverse)
-library(zeallot)
-
-setup <- list()
 source("helper.R")
 ```
 

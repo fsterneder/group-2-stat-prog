@@ -1,4 +1,9 @@
+library(tidyverse)
+library(zeallot)
+
 #### helper functions ####
+
+setup <- list()
 
 # File Load
 setup$files <- c("AllstarFull","Appearances","AwardsManagers","AwardsPlayers","AwardsShareManagers","AwardsSharePlayers","CollegePlaying","HallOfFame","Managers","ManagersHalf","People","Teams")
