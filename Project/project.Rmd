@@ -25,7 +25,7 @@ opts_chunk$set(echo = TRUE,
                messages = FALSE,
                out.width = "70%",
                fig.align = "center")
-source("helper.R")
+source("help.R")
 ```
 
 ```{r}
