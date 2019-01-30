@@ -34,20 +34,21 @@ Let's anwers the simplest question first.
 
 ## How old is the average active professional baseball player?
 
-We define active as in "played last season" which in our case and dataset is the season of 2018. Also we calculate the age with the start of the season (March 29th).
-
 ```{r}
 age_calc <- function(from,to=now()) floor(difftime(to, from)/dyears(1))
-age_const = "20180329"
+age_year = 2016
+age_const = paste0(age_year,"0403")
 
 age_c_players <- 
-    left_join(Appearances %>% filter(yearID == 2018), People, "playerID") %>%
+    left_join(Appearances %>% filter(yearID == age_year), People, "playerID") %>%
     mutate(birthDate = as_date(ymd(paste(birthYear, birthMonth, birthDay, sep = "-")))) %>%
     mutate(age = age_calc(birthDate, ymd(age_const))) %>%
     select(playerID, teamID, birthDate, age, nameFirst, nameLast, G_all, GS) 
 ```
 
-We find that the average active professional baseball player , in the season of 2018, was born `r mean(age_c_players$birthDate)` and was therefore `r age_calc(mean(age_c_players$birthDate),ymd(age_const))` years old. 
+We define active as in "played this season" which in our case and dataset is the season of `r age_year`. Also we calculate the age with the start of the season (April 3rd).
+
+We find that the average active professional baseball player , in the season of `r age_year`, was born `r mean(age_c_players$birthDate)` and was therefore `r age_calc(mean(age_c_players$birthDate),ymd(age_const))` years old. 
 
 Let's visualize that.
 
@@ -58,7 +59,7 @@ age_c_players %>%
     geom_vline(aes(xintercept = mean(age)), alpha = 0.5, color = "red")
 ```
 
-Funfact: As we might be able to tell from the graph, the oldest player in the season of 2018 was [`r age_calc(min(age_c_players$birthDate),ymd(age_const))`](https://en.wikipedia.org/wiki/Bartolo_Col%C3%B3n).
+Funfact: As we might be able to tell from the graph, the oldest player in the season of `r age_year` was `r age_calc(min(age_c_players$birthDate),ymd(age_const))`.
 
 Now we know about the average active player. Let's go further.
 
@@ -70,7 +71,7 @@ names(color$team_main) <- sort(unique(age_c_players$teamID))
 age_c_team <- age_c_players %>% 
    group_by(teamID) %>%
    summarise(meanAge = mean(age), medianAge = median(age)) %>%
-   left_join(Teams %>% filter(yearID == 2018) %>% select(teamID,name,W,L,G), by = "teamID")
+   left_join(Teams %>% filter(yearID == age_year) %>% select(teamID,name,W,L,G), by = "teamID")
  
 age_c_team %>% 
     ggplot(aes(reorder(teamID,meanAge), meanAge, color = teamID)) +
@@ -102,7 +103,7 @@ The idea is to weight the playing time of each player and therefore see if teams
 age_c_team <- 
    left_join(
              age_c_players,
-             (Teams %>% filter(yearID == "2018") %>% select(teamID,G, W, L)),
+             (Teams %>% filter(yearID == age_year) %>% select(teamID,G, W, L)),
              "teamID"
             ) %>%
    group_by(teamID) %>% 
