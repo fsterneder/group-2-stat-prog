@@ -38,58 +38,57 @@ We define active as in "played last season" which in our case and dataset is the
 
 ```{r}
 age_calc <- function(from,to=now()) floor(difftime(to, from)/dyears(1))
-age_def = "20180329"
+age_const = "20180329"
 
-age_current_players <- 
+age_c_players <- 
     left_join(Appearances %>% filter(yearID == 2018), People, "playerID") %>%
     mutate(birthDate = as_date(ymd(paste(birthYear, birthMonth, birthDay, sep = "-")))) %>%
-    mutate(age = age_calc(birthDate,ymd(age_def))) %>%
+    mutate(age = age_calc(birthDate, ymd(age_const))) %>%
     select(playerID, teamID, birthDate, age, nameFirst, nameLast, G_all, GS) 
 ```
 
-We find that the average active professional baseball player in 2018 was born `r mean(age_current_players$birthDate)` and was therefore `r age_calc(mean(age_current_players$birthDate),ymd(age_def))` years old. 
+We find that the average active professional baseball player , in the season of 2018, was born `r mean(age_c_players$birthDate)` and was therefore `r age_calc(mean(age_c_players$birthDate),ymd(age_const))` years old. 
 
 Let's visualize that.
 
 ```{r}
-age_current_players %>% 
+age_c_players %>% 
     ggplot(aes(x = age)) +
-    geom_line(stat="density") + 
+    geom_line(stat = "density") + 
     geom_vline(aes(xintercept = mean(age)), alpha = 0.5, color = "red")
 ```
 
-Funfact: As we might be able to tell from the graph, the oldest player in the season of 2018 was [`r age_calc(min(age_current_players$birthDate),ymd(age_def))`](https://en.wikipedia.org/wiki/Bartolo_Col%C3%B3n).
+Funfact: As we might be able to tell from the graph, the oldest player in the season of 2018 was [`r age_calc(min(age_c_players$birthDate),ymd(age_const))`](https://en.wikipedia.org/wiki/Bartolo_Col%C3%B3n).
 
 Now we know about the average active player. Let's go further.
 
 ## Does the age distribution differ significantly per team?
 
 ```{r}
-names(color$team_main) <- sort(unique(age_current_players$teamID))
-names(color$team_second) <- sort(unique(age_current_players$teamID))
+names(color$team_main) <- sort(unique(age_c_players$teamID))
 
-age_current_team <- age_current_players %>% 
+age_c_team <- age_c_players %>% 
    group_by(teamID) %>%
    summarise(meanAge = mean(age), medianAge = median(age)) %>%
-   left_join((Teams %>% filter(yearID == 2018) %>% select(teamID,name)),by="teamID")
+   left_join(Teams %>% filter(yearID == 2018) %>% select(teamID,name,W,L,G), by = "teamID")
  
-age_current_team %>% 
-    ggplot(aes(reorder(teamID,meanAge),meanAge,color=teamID)) +
-    geom_point(size=2) + 
-    scale_color_manual(values=color$team_main) +
-    guides(color=FALSE) + 
+age_c_team %>% 
+    ggplot(aes(reorder(teamID,meanAge), meanAge, color = teamID)) +
+    geom_point(size = 2) + 
+    scale_color_manual(values = color$team_main) +
+    guides(color = FALSE) + 
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) 
 ```
-So now we know that the the team with the - on average - youngest players are the `r (age_current_team %>% filter(meanAge == min(meanAge)))$name` while the `r (age_current_team %>% filter(meanAge == max(meanAge)))$name` deploys -again, on average- the oldest players. But the difference between these 'extremes' is `r signif(max(age_current_team$meanAge) - min(age_current_team$meanAge),3)` and in my view not that siginificant. 
+So now we know that the the team with the - on average - youngest players are the `r (age_c_team %>% filter(meanAge == min(meanAge)))$name` while the `r (age_c_team %>% filter(meanAge == max(meanAge)))$name` deploys -again, on average- the oldest players. But the difference between these 'extremes' is `r signif(max(age_c_team$meanAge) - min(age_c_team$meanAge),3)` and in my view not that siginificant. 
 
 We still want to know more, let's look at the related boxplot.
 
 ```{r}
-age_current_players %>% 
-    left_join(age_current_team, by="teamID") %>%
-    ggplot(aes(reorder(teamID,meanAge),age,color=teamID)) +
+age_c_players %>% 
+    left_join(age_c_team, by = "teamID") %>%
+    ggplot(aes(reorder(teamID,meanAge),age,color = teamID)) +
     geom_boxplot(notch = TRUE) +
-    scale_color_manual(values=color$team_main) +
+    scale_color_manual(values = color$team_main) +
     guides(color=FALSE) + 
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) 
 ```
@@ -100,29 +99,39 @@ As we see, the IQR and Median isn't _that_ different between the teams. Maybe we
 The idea is to weight the playing time of each player and therefore see if teams rather put their faith in younger players or rather value experience. The formula we use to weigh each time is $$ \text{age}_p \frac{\text{games played}_p}{\frac{1}{n}\sum^n_{i=1}\text{games played}_i} $$
 
 ```{r}
-age_current_team <- 
+age_c_team <- 
    left_join(
-             age_current_players,
-             (Teams %>% filter(yearID == "2018") %>% select(teamID,G)),
+             age_c_players,
+             (Teams %>% filter(yearID == "2018") %>% select(teamID,G, W, L)),
              "teamID"
             ) %>%
    group_by(teamID) %>% 
    add_count() %>%
    mutate(G_avg = mean(G_all),GS_avg = mean(GS)) %>%
    mutate(gProp = age*(G_all/G_avg), gsProp = age*(GS/GS_avg)) %>%
-   summarise(gp = mean(gProp), gsp = mean(gsProp)) %>%
-   left_join(age_current_team, "teamID")
+   summarise(weightGamesPlayed = mean(gProp), weightGamesStarted = mean(gsProp)) %>%
+   left_join(age_c_team, "teamID")
 
-age_current_team %>% 
-    ggplot(aes(reorder(teamID,meanAge),gp,color=teamID)) +
-    geom_point(aes(reorder(teamID,meanAge),meanAge,color=teamID),size=0.8) +
+#kable(sample_n(age_c_team,5), format="markdown")
+
+age_c_team %>% 
+    ggplot(aes(reorder(teamID, meanAge), weightGamesPlayed, color = teamID)) +
+    geom_point(aes(reorder(teamID, meanAge), meanAge, color = teamID), size = 0.8) +
     geom_point(size = 2) + 
     scale_color_manual(values = color$team_main) +
-    geom_segment(aes(xend=teamID, yend=meanAge)) +
-    guides(color=FALSE) + 
+    geom_segment(aes(xend = teamID, yend = meanAge)) +
+    guides(color = FALSE) + 
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) 
 ```
 
-As we can can see, there are some differences if we weight the playing time, but most noticeable to me is that the shift is clearly toward more experienced players. To be exact, according to this new metric the average team is now `r signif(age_current_team %>% summarise(mean(gp-meanAge)),4)` years older which adds up to `r signif(age_current_team %>% summarise(sum(gp-meanAge)),4)` years in total for the whole league.
+As we can can see, there are some differences if we weight the playing time, but most noticeable to me is that the shift is clearly toward more experienced players. To be exact, according to this new metric the average team is now `r signif(age_c_team %>% summarise(mean(weightGamesPlayed-meanAge)),4)` years older which adds up to `r signif(age_c_team %>% summarise(sum(weightGamesPlayed-meanAge)),4)` years in total for the whole league.
 
-## Linear Model - Performance and Age
+## Linear Model - performance and average team age
+
+```{r}
+age_c_team <- age_c_team %>% mutate(Wprop = W/G)
+
+age_perf_mod <- lm(data=age_c_team, formula= Wprop ~ weightGamesPlayed)
+```
+
+## performance of individuals as they age

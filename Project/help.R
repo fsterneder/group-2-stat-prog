@@ -7,7 +7,7 @@ library(zeallot)
 setup <- list()
 
 # CSV LOAD
-setup$files <- c("AllstarFull","Appearances","AwardsManagers","AwardsPlayers","AwardsShareManagers","AwardsSharePlayers","CollegePlaying","HallOfFame","Managers","ManagersHalf","People","Teams")
+setup$files <- c("Appearances","People","Teams")
 
 ## read all files from setup$files
 setup$data %<-% 

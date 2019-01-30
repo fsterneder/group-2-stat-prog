@@ -10,6 +10,7 @@ Andrea: How old do baseball players get? (maybe grouping them in birthdecades, m
 Andrea: How old are baseball players when they get into the Hall of Fame/get their first award?  
 Andrea: What's the average age of playing for the first time (in each league)?  
 Andrea: Development of the average age per league/team  
+Kory: Performance of Individuals as they age (winshares)
 
 # Batting 
 
