@@ -110,13 +110,13 @@ age_c_team <-
    add_count() %>%
    mutate(G_avg = mean(G_all),GS_avg = mean(GS)) %>%
    mutate(gProp = age*(G_all/G_avg), gsProp = age*(GS/GS_avg)) %>%
-   summarise(weightGamesPlayed = mean(gProp), weightGamesStarted = mean(gsProp)) %>%
+   summarise(weightByG = mean(gProp), weightByGS = mean(gsProp)) %>%
    left_join(age_c_team, "teamID")
 
 #kable(sample_n(age_c_team,5), format="markdown")
 
 age_c_team %>% 
-    ggplot(aes(reorder(teamID, meanAge), weightGamesPlayed, color = teamID)) +
+    ggplot(aes(reorder(teamID, meanAge), weightByG, color = teamID)) +
     geom_point(aes(reorder(teamID, meanAge), meanAge, color = teamID), size = 0.8) +
     geom_point(size = 2) + 
     scale_color_manual(values = color$team_main) +
@@ -125,14 +125,24 @@ age_c_team %>%
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) 
 ```
 
-As we can can see, there are some differences if we weight the playing time, but most noticeable to me is that the shift is clearly toward more experienced players. To be exact, according to this new metric the average team is now `r signif(age_c_team %>% summarise(mean(weightGamesPlayed-meanAge)),4)` years older which adds up to `r signif(age_c_team %>% summarise(sum(weightGamesPlayed-meanAge)),4)` years in total for the whole league.
+As we can can see, there are some differences if we weight the playing time, but most noticeable to me is that the shift is clearly toward more experienced players. To be exact, according to this new metric the average team is now `r signif(age_c_team %>% summarise(mean(weightByG-meanAge)),4)` years older which adds up to `r signif(age_c_team %>% summarise(sum(weightByG-meanAge)),4)` years in total for the whole league.
 
 ## Linear Model - performance and average team age
 
 ```{r}
 age_c_team <- age_c_team %>% mutate(Wprop = W/G)
+age_perf_mod <- lm(data=age_c_team, formula= Wprop ~ weightByG)
+age_c_team <- age_c_team %>% add_predictions(age_perf_mod) %>% add_residuals(age_perf_mod)
 
-age_perf_mod <- lm(data=age_c_team, formula= Wprop ~ weightGamesPlayed)
+age_c_team %>% ggplot(aes(weightByG)) + geom_point(aes(y=Wprop)) + geom_line(aes(y=pred),color="red")
+
+age_c_team %>% ggplot(aes(resid)) + geom_freqpoly(binwidth=0.04)
+
+age_c_team %>% ggplot(aes(weightByG, resid)) + geom_point()
+```
+
+```{r results="asis"}
+stargazer(age_perf_mod, align=T, type='html')
 ```
 
 ## performance of individuals as they age

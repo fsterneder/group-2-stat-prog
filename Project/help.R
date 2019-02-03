@@ -1,6 +1,8 @@
 library(tidyverse)
 library(lubridate)
 library(zeallot)
+library(modelr)
+library(stargazer)
 
 #### helper functions ####
 
