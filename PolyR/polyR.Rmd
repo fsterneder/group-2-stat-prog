@@ -28,23 +28,127 @@ opts_chunk$set(echo = TRUE,
                fig.align = "center")
 ```
 
-# Explanations and drawings
+# Explanations and drawings {.tabset .tabset-fade .tabset-pills}
 
 > Explain what every function does.  Importantly,  you need to include the environment in which the function is bound and the other variables in this environment.  Alternatively,  you  could  draw  a  picture  of  all  of  the  environments  which  enclose  functions which are bound in the expert list.  Both capture the same information (though the picture is more succinct)
 
-## Explain the functions {.tabset .tabset-fade .tabset-pills}
+## makeBidderGeom
 
-### makeBidderGeom
+This function constructs a list containing three functions and nested inside, a list which stores the current state. We have a bidAccepted function which increments the wealth value in the state, the bidRejected which decreases the wealth value and the bid function which implements the geometric behavior of the bid.
 
-### makeBidderConst
+```{r eval=F}
+makeBidderGeom = function(wealth=.05, frac = .5) {
+  list( 
+    state = function() { 
+      list(
+        wealth = wealth,
+        frac   = frac
+      ) 
+    },
+    bidAccepted = function(a) { wealth <<- wealth + a },
+    bidRejected = function(d) { wealth <<- wealth - d },
+    bid = function()  { ifelse(wealth > .0001, wealth*frac, wealth) }
+  )
+}
+```
 
-### makeRawSource
+## makeBidderConst
 
-### makeExpert
+See makeBidderGeom, almost the same besides the bid function which has a different (constant) bidding behavior and the state.
 
-### makeExpertGeom
+```{r eval=F}
+makeBidderConst = function(wealth=.05, const=.01) {
+  list( 
+    state = function() { 
+      list(
+        wealth  = wealth,
+        const   = const
+      ) 
+    },
+    bidAccepted = function(a) { wealth <<- wealth + a },
+    bidRejected = function(d) { wealth <<- wealth - d },
+    bid = function()  { ifelse(wealth >= const, const, wealth) }  
+  )
+}
+```
 
-## Environment drawings {.tabset .tabset-fade .tabset-pills}
+## makeRawSource
+
+This constructor handles the positions 
+
+```{r eval=F}
+makeRawSource <- function(ncolumns) {
+  activeColumns  = 0:ncolumns
+  position       = ncolumns
+  prevPosition   = NA
+  nactive        = ncolumns
+  
+  list(	
+    name = "Marginal",
+    state = function() { 
+      list(
+        position     = position, 
+        prevPosition = prevPosition,
+        active       = activeColumns,
+        nactive      = sum(!is.na(activeColumns[-1]))
+      )
+    },
+    generateFeature = function() { 
+      prevPosition  <<- position
+      position      <<- max(activeColumns[activeColumns < position], na.rm=T)
+      return(prevPosition) 
+    },
+    dropLastFeature = function() { activeColumns[prevPosition+1] <<- NA },
+    udPass = function() {
+      position <<- max(activeColumns, na.rm=T)
+      prevPosition <<- NA
+    }
+  )
+}
+```
+
+## makeExpert
+
+```{r eval=F}
+makeExpert <- function (bidder, constructor) {
+  list(	
+    name         = "Geom",
+    bidder       = bidder,
+    constructor  = constructor,
+    state        = function() { 
+      list(
+        wealth   = bidder$state()$wealth,
+        position = constructor$state()$position
+      )
+    },
+    bid          = function() { bidder$bid() },
+    feature      = function() { constructor$generateFeature() },
+    finishedPass = function() { constructor$state()$position == 0 },
+    finished     = function() { constructor$state()$nactive == 0 },
+    passTest     = function(a) {
+      bidder$bidAccepted(a)
+      constructor$dropLastFeature() 
+    },
+    pay          = function(payment) {
+      bidder$bidRejected(payment)
+    },
+    udPass       = function() { constructor$udPass() }
+  )
+}
+```
+
+## makeExpertGeom
+
+```{r eval=F}
+makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
+  makeExpert(
+    makeBidderGeom(wealth, frac),
+    makeRawSource(ncolumns)
+  )
+}
+```
+
+## environmentDrawing
 
 # Comment the code
 
@@ -172,6 +276,83 @@ pvals[unlist(rejectedHyp)]
 # Why a list?
 
 > The state function returns the values of the private variables.  Why is this a function that returns a list and not just a list of the values of the private variables?
+
+If it would be a list the values wouldn't update and would only return the values at the initialization of the parent function. Let's take our constructor function and see how that works practice.
+
+```{r}
+makeRawSource <- function(ncolumns) {
+  activeColumns  = 0:ncolumns
+  position       = ncolumns
+  prevPosition   = NA
+  nactive        = ncolumns
+  
+  list(	
+    name = "Marginal",
+    state = function() { 
+      list(
+        position     = position, 
+        prevPosition = prevPosition,
+        active       = activeColumns,
+        nactive      = sum(!is.na(activeColumns[-1]))
+      )
+    },
+    generateFeature = function() { 
+      prevPosition  <<- position
+      position      <<- max(activeColumns[activeColumns < position], na.rm=T)
+      return(prevPosition) 
+    },
+    dropLastFeature = function() { activeColumns[prevPosition+1] <<- NA },
+    udPass = function() {
+      position <<- max(activeColumns, na.rm=T)
+      prevPosition <<- NA
+    }
+  )
+}
+
+makeRawSourceAlt <- function(ncolumns) {
+  activeColumns  = 0:ncolumns
+  position       = ncolumns
+  prevPosition   = NA
+  nactive        = ncolumns
+  
+  list(
+    name = "Marginal",
+    state = list(
+        position     = position, 
+        prevPosition = prevPosition,
+        active       = activeColumns,
+        nactive      = sum(!is.na(activeColumns[-1]))
+    ),
+    generateFeature = function() { 
+      prevPosition  <<- position
+      position      <<- max(activeColumns[activeColumns < position], na.rm=T)
+      return(prevPosition) 
+    },
+    dropLastFeature = function() { activeColumns[prevPosition+1] <<- NA },
+    udPass = function() {
+      position <<- max(activeColumns, na.rm=T)
+      prevPosition <<- NA
+    }
+  )
+}
+
+setn = 5
+testA <- makeRawSourceAlt(setn)
+testB <- makeRawSource(setn)
+
+testA$state
+testB$state()
+
+
+while(setn >= 0){
+   testA$generateFeature() 
+   testB$generateFeature() 
+   setn = setn-1
+}
+
+testA$state
+testB$state()
+```
 
 # Multiple experts
 
