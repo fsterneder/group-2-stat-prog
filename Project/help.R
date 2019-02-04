@@ -3,13 +3,18 @@ library(lubridate)
 library(zeallot)
 library(modelr)
 library(stargazer)
+library(plotly)
 
 #### helper functions ####
 
 setup <- list()
 
-# CSV LOAD
-setup$files <- c("Appearances","People","Teams")
+# File Load
+setup$files <- c("AllstarFull","Appearances","AwardsManagers","AwardsPlayers",
+                 "AwardsShareManagers","AwardsSharePlayers","Batting",
+                 "BattingPost","CollegePlaying","Fielding","HallOfFame","Managers",
+                 "ManagersHalf","People","Pitching","Teams", "warPit",
+                 "warPos")
 
 ## read all files from setup$files
 setup$data %<-% 
@@ -21,6 +26,7 @@ setup$data %<-%
 
 ## assigns setup$data files the names of setup$files
 walk2(setup$files, setup$data, assign,envir=globalenv())
+
 
 # COLOR
 
