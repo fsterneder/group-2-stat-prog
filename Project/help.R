@@ -1,12 +1,18 @@
 library(tidyverse)
 library(zeallot)
+library(lubridate)
+library(plotly)
 
 #### helper functions ####
 
 setup <- list()
 
 # File Load
-setup$files <- c("AllstarFull","Appearances","AwardsManagers","AwardsPlayers","AwardsShareManagers","AwardsSharePlayers","CollegePlaying","HallOfFame","Managers","ManagersHalf","People","Teams")
+setup$files <- c("AllstarFull","Appearances","AwardsManagers","AwardsPlayers",
+                 "AwardsShareManagers","AwardsSharePlayers","Batting",
+                 "BattingPost","CollegePlaying","Fielding","HallOfFame","Managers",
+                 "ManagersHalf","People","Pitching","Teams", "warPit",
+                 "warPos")
 
 ## read all files from setup$files
 setup$data %<-% 
@@ -18,3 +24,4 @@ setup$data %<-%
 
 ## assigns setup$data files the names of setup$files
 walk2(setup$files, setup$data, assign,envir=globalenv())
+

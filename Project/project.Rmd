@@ -26,8 +26,153 @@ opts_chunk$set(echo = TRUE,
                out.width = "70%",
                fig.align = "center")
 source("help.R")
-```
+```  
+#Proportions of Batting And Throwing Hands Since 1871  
+
+##Data Preparation   
+
+Our aim was to compute and plot the number of left, right and - if applicable - both-handed players that were in the league in any given year. The ```People``` table from Lahman's Baseball database contains information on each player's preferred batting and throwing hand, while the ```Appearances``` table contains information on which players were active each year, since 1871. Thus, if a player was active in, say 1871, he should appear in the ```Appearances``` table and given the information on his preferred batting and throwing hand from the ```People``` table, we should be able to derive the number of right, left, or both-handed players that were active in a given year. 
+
+Unfortunately, a simple join of the ```People```and ```Appearances``` tables via the intended key "playerID" is not possible, since a given player can be listed multiple times in the ```Appearances``` table. This is usually due to players switching teams midseason. If a player switched teams, he will appear as many times in the ```Appearances``` table as the number of teams he played for that year. It follows that if we joined ```Appearances```and ```People``` and computed the number/proportion of players in each handedness category and year, we would count some players more than once. 
 
 ```{r}
-People
+#Check number of observations per player and year
+Appearances %>% 
+  count(playerID, yearID) %>% 
+  filter(n > 1)
+```  
+We solved this issue by creating a new table ```didAppear``` which indicates whether a player appeared at least once in a given year (i.e., there's only one row per year and player).
+
+```{r}
+didAppear <- 
+  Appearances %>% 
+  group_by(yearID) %>% 
+  distinct(playerID) %>% 
+  ungroup()
+
+didAppear
 ```
+
+Now, each player is counted only once per active year. 
+```{r}
+didAppear %>% 
+  count(playerID, yearID) %>% 
+  filter(n > 1)
+```  
+The ```People``` table already has a unique key in "playerID".
+
+```{r}
+People %>% 
+  count(playerID) %>% 
+  filter(n > 1)
+```
+
+
+We used ```left_join()``` to combine the ```didAppear``` and the ```People``` tables. The variable "playerID" served as a key. In the resulting table ```players``` each row corresponds to a unique year-by-player combination. A players preferred batting hand is encoded in the variable "bats", while his preferred throwing hand is encoded in the variable "throws". We changed these variables from type "character" to type "factor" and ordered their possible outcomes as follows: Right < Left < Both for "bats", and Right < Left, for "throws" (Note that bats had 3 possible outcomes, while throws only had 2). This ordering ensured that the legends in the final plots were ordered from most frequent to least frequent. 
+
+Unfortunately, the "throws" variable contained a single observation with the value "S" (instead of "R", or "L"). Since there was no mentioning of outcome "S" in the description of Lahman's baseball database, we concluded that this must be a typo or some other mistake. Therefore "S" was changed to "NA". 
+
+```{r}
+unique(People$throws) #possible outcomes for throws
+sum(People$throws == "S", na.rm = T) #Count number of observations with "S"
+People$throws[People$throws=="S"] <- NA
+``` 
+
+
+```{r}
+players <- left_join(didAppear,People,by="playerID") %>% 
+  mutate(
+    bats = factor(bats, 
+                  levels = c("R","L","B"),
+                  labels= c("Right","Left","Both"), #3 possible outcomes
+                  ordered=T),#To get the legend of the plot in the right order
+    throws = factor(throws,
+                    levels = c("R","L"),
+                    labels = c("Right", "Left"), #only 2 possible outcomes
+                    ordered = T)#To get the legend of the plot in the right order
+  ) %>% 
+  rename("year" = yearID)
+
+#check if each playerID-by-year combination is unique
+players %>% 
+  count(playerID, year) %>% 
+  filter(n > 1)
+```
+
+##Batting Hand
+The table ```plrBats```contains each year's total number of observations for all three handedness categories (left, right, both; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
+```{r}
+plrBats <- players %>% 
+  group_by(year,bats) %>% #Ensures that we get the data for each year
+  count() %>%
+  ungroup() %>% 
+  drop_na() %>% #Drop observations for which the batting hand was not available
+  group_by(year) %>% 
+  mutate(
+    "N" = sum(n), #Get total number of observations for each year (irrespective of handedness category) 
+    "proportion" = round(n/sum(n),3)
+  ) %>% 
+  rename("observed" = n)
+plrBats
+```
+
+##Plot  
+We figured that the number of observations a given year's proportional estimate is based upon may be an important piece of information. In order to include this information, we used ```ggplotly()``` as it allowed us to include N in ```plotly```'s own "hover text". 
+In more detail, we first created the ```ggplot```object ```batsPlot```  using ```geom_lines```to connect each year's proportions, with separate lines for each handedness category. Notice that we specified a third aesthetic "label = N" in addition to the x- and y-coordinates. This third aesthetic was necessary, as the ```tooltip```argument from ```ggplotly()``` can only display data that are specified as aesthetic arguments in the ```ggplot```object. 
+If you hover your cursor over any data point in the plot, a text element should pop up, displaying the year, the proportion and the total number of observations, N. To specify which aesthetics are displayed by ```ggplotly```, we provided the  ```tooltip``` argument with a string vector of the follwoing aesthetics: "year", "proportion", "N". 
+
+
+```{r}
+batPlot <- 
+  #aesthetic "label" is necessary for ggplotly's tooltip argument
+  ggplot(plrBats, aes(year, proportion, label = N))+ 
+  geom_line(aes(color=bats))+
+  scale_x_continuous(name="Year", breaks = seq(1871,2018,20))+
+  scale_y_continuous(breaks=seq(0,1,0.1))+
+  scale_color_brewer(palette="Set1")+
+  ylab("Proportion of Preferred Batting Hand")+
+  labs(color="Batting \n Hand")+
+  ggtitle("Proportional Distribution of Batting Hands")
+
+#Convert ggplot object into plotly object
+ggplotly(batPlot, tooltip = c("proportion", "year", "N")) 
+
+```
+
+##Throwing Hand  
+
+To obtain the proportions of left- and right-handed throwers for each year, we proceeded analogously to the more detailed account above. The table ```plrThrows``` contains the each year's total number of observations both handedness categories (left and right; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
+
+```{r}
+plrThrows <- players %>% 
+  group_by(year,throws) %>% 
+  count() %>%
+  ungroup() %>% 
+  drop_na() %>% 
+  group_by(year) %>% 
+  mutate(
+    "N" = sum(n),
+    "proportion" = round(n/sum(n),3)
+  ) 
+
+```
+
+##Plot  
+Again, ```ggplotly()``` was used to add the number of total observations a given years proportional estimate is based upon as a text element.   
+
+```{r}
+throwPlot <- 
+  ggplot(plrThrows, aes(year, proportion, label = N))+
+  geom_line(aes(color=throws))+
+  scale_x_continuous(name="Year", breaks = seq(1871,2018,20))+
+  scale_y_continuous(breaks=seq(0,1,0.1))+
+  scale_color_brewer(palette="Set1")+
+  ylab("Proportion of Preferred Throwing Hand")+
+  labs(color="Throwing \n Hand")+
+  ggtitle("Proportional Distribution of Throwing Hands")
+
+ggplotly(throwPlot,tooltip = c("proportion", "year", "N"))
+```  
+
+
+
