@@ -16,6 +16,7 @@ output:
 ---
 
 ```{r hide=T, warning=F, message=F}
+
 library(knitr)
 opts_chunk$set(echo = TRUE,
                collapse = TRUE,
@@ -67,6 +68,112 @@ People %>%
   filter(n > 1)
 ```
 
+
+We used ```left_join()``` to combine the ```didAppear``` and the ```People``` tables. The variable "playerID" served as a key. In the resulting table ```players``` each row corresponds to a unique year-by-player combination. A players preferred batting hand is encoded in the variable "bats", while his preferred throwing hand is encoded in the variable "throws". We changed these variables from type "character" to type "factor" and ordered their possible outcomes as follows: Right < Left < Both for "bats", and Right < Left, for "throws" (Note that bats had 3 possible outcomes, while throws only had 2). This ordering ensured that the legends in the final plots were ordered from most frequent to least frequent. 
+
+Unfortunately, the "throws" variable contained a single observation with the value "S" (instead of "R", or "L"). Since there was no mentioning of outcome "S" in the description of Lahman's baseball database, we concluded that this must be a typo or some other mistake. Therefore "S" was changed to "NA". 
+
+```{r}
+unique(People$throws) #possible outcomes for throws
+sum(People$throws == "S", na.rm = T) #Count number of observations with "S"
+People$throws[People$throws=="S"] <- NA
+``` 
+
+
+```{r}
+players <- left_join(didAppear,People,by="playerID") %>% 
+  mutate(
+    bats = factor(bats, 
+                  levels = c("R","L","B"),
+                  labels= c("Right","Left","Both"), #3 possible outcomes
+                  ordered=T),#To get the legend of the plot in the right order
+    throws = factor(throws,
+                    levels = c("R","L"),
+                    labels = c("Right", "Left"), #only 2 possible outcomes
+                    ordered = T)#To get the legend of the plot in the right order
+  ) %>% 
+  rename("year" = yearID)
+
+#check if each playerID-by-year combination is unique
+players %>% 
+  count(playerID, year) %>% 
+  filter(n > 1)
+```
+
+##Batting Hand
+The table ```plrBats```contains each year's total number of observations for all three handedness categories (left, right, both; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
+```{r}
+plrBats <- players %>% 
+  group_by(year,bats) %>% #Ensures that we get the data for each year
+  count() %>%
+  ungroup() %>% 
+  drop_na() %>% #Drop observations for which the batting hand was not available
+  group_by(year) %>% 
+  mutate(
+    "N" = sum(n), #Get total number of observations for each year (irrespective of handedness category) 
+    "proportion" = round(n/sum(n),3)
+  ) %>% 
+  rename("observed" = n)
+plrBats
+```
+
+##Plot  
+We figured that the number of observations a given year's proportional estimate is based upon may be an important piece of information. In order to include this information, we used ```ggplotly()``` as it allowed us to include N in ```plotly```'s own "hover text". 
+In more detail, we first created the ```ggplot```object ```batsPlot```  using ```geom_lines```to connect each year's proportions, with separate lines for each handedness category. Notice that we specified a third aesthetic "label = N" in addition to the x- and y-coordinates. This third aesthetic was necessary, as the ```tooltip```argument from ```ggplotly()``` can only display data that are specified as aesthetic arguments in the ```ggplot```object. 
+If you hover your cursor over any data point in the plot, a text element should pop up, displaying the year, the proportion and the total number of observations, N. To specify which aesthetics are displayed by ```ggplotly```, we provided the  ```tooltip``` argument with a string vector of the follwoing aesthetics: "year", "proportion", "N". 
+
+
+```{r}
+batPlot <- 
+  #aesthetic "label" is necessary for ggplotly's tooltip argument
+  ggplot(plrBats, aes(year, proportion, label = N))+ 
+  geom_line(aes(color=bats))+
+  scale_x_continuous(name="Year", breaks = seq(1871,2018,20))+
+  scale_y_continuous(breaks=seq(0,1,0.1))+
+  scale_color_brewer(palette="Set1")+
+  ylab("Proportion of Preferred Batting Hand")+
+  labs(color="Batting \n Hand")+
+  ggtitle("Proportional Distribution of Batting Hands")
+
+#Convert ggplot object into plotly object
+ggplotly(batPlot, tooltip = c("proportion", "year", "N")) 
+
+```
+
+##Throwing Hand  
+
+To obtain the proportions of left- and right-handed throwers for each year, we proceeded analogously to the more detailed account above. The table ```plrThrows``` contains the each year's total number of observations both handedness categories (left and right; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
+
+```{r}
+plrThrows <- players %>% 
+  group_by(year,throws) %>% 
+  count() %>%
+  ungroup() %>% 
+  drop_na() %>% 
+  group_by(year) %>% 
+  mutate(
+    "N" = sum(n),
+    "proportion" = round(n/sum(n),3)
+  ) 
+
+```
+
+##Plot  
+Again, ```ggplotly()``` was used to add the number of total observations a given years proportional estimate is based upon as a text element.   
+
+```{r}
+throwPlot <- 
+  ggplot(plrThrows, aes(year, proportion, label = N))+
+  geom_line(aes(color=throws))+
+  scale_x_continuous(name="Year", breaks = seq(1871,2018,20))+
+  scale_y_continuous(breaks=seq(0,1,0.1))+
+  scale_color_brewer(palette="Set1")+
+  ylab("Proportion of Preferred Throwing Hand")+
+  labs(color="Throwing \n Hand")+
+  ggtitle("Proportional Distribution of Throwing Hands")
+
+ggplotly(throwPlot,tooltip = c("proportion", "year", "N"))
+```  
 
 # Of Age and Baseball
 
@@ -187,109 +294,237 @@ stargazer(age_perf_mod, align=T, type='html')
 
 ## performance of individuals as they age
 
-We used ```left_join()``` to combine the ```didAppear``` and the ```People``` tables. The variable "playerID" served as a key. In the resulting table ```players``` each row corresponds to a unique year-by-player combination. A players preferred batting hand is encoded in the variable "bats", while his preferred throwing hand is encoded in the variable "throws". We changed these variables from type "character" to type "factor" and ordered their possible outcomes as follows: Right < Left < Both for "bats", and Right < Left, for "throws" (Note that bats had 3 possible outcomes, while throws only had 2). This ordering ensured that the legends in the final plots were ordered from most frequent to least frequent. 
+Adjusting the US-Salary statistics
+The statistics for the average wage in the US came from the OECD (https://data.oecd.org/earnwage/average-wages.htm#indicator-chart). Unfortunately, we didn't find more accurate data for the wages than the average. Be careful with interpreting the numbers, as with wages, the mean and the median differ a lot. 
+Within the dataset some columns were dropped, and the average development in percent was calculated. 
+```{r}
+#renaming the columns
+colnames(Salaries_US) = c("country", "indicator", "subject", "currency", "frequency", "yearID", "av_wage_US", "Flag_codes")
+Salaries_US <- Salaries_US %>%
+  #dropping columns
+  subset(select = -c(country, indicator, subject, frequency, Flag_codes)) %>%
+  #calculating average development
+  mutate(av_wage_perc = ((av_wage_US/lag(av_wage_US) - 1) * 100),
+         av_wage_100perc = ((av_wage_US-min(av_wage_US))/max(av_wage_US)))
+(Salaries_US)
+```
+  
+# Salaries
+Adjusting the Baseball-Salary statistics
+With the baseball salaries, some statistical values, like mean, max, min and median were calculated. Also the average development of the mean salary was computed to compare it to the US salaries. 
+```{r}
+sal_bb_stats <- Salaries %>%
+  group_by(yearID) %>%
+  summarise(n_players = n(), 
+         n_dist_players = n_distinct(playerID),
+         salary_mean = mean(salary),
+         salary_max = max(salary),
+         salary_min = min(salary),
+         salary_median = quantile(salary, probs = 0.5))
 
-Unfortunately, the "throws" variable contained a single observation with the value "S" (instead of "R", or "L"). Since there was no mentioning of outcome "S" in the description of Lahman's baseball database, we concluded that this must be a typo or some other mistake. Therefore "S" was changed to "NA". 
+#
+sal_bb_stats_90 <- sal_bb_stats %>%
+  filter(yearID >= 1990) %>%
+  mutate(salary_mean_perc = ((salary_mean/lag(salary_mean) - 1) * 100),
+         salary_mean_100perc = ((salary_mean-min(salary_mean))/max(salary_mean))) 
+```
+  
+##Salaries overview
+The boxplot shows the median salary, and the first and third quantile. There are a lot of outliers. The regression line is around the mean salary, which is also shown. In 2000 there was a leap in the median salary, and in and after 2009, the highest salaries so far were payed. We're going to take a look on that afterwards. 
 
 ```{r}
-unique(People$throws) #possible outcomes for throws
-sum(People$throws == "S", na.rm = T) #Count number of observations with "S"
-People$throws[People$throws=="S"] <- NA
-``` 
+summary(Salaries)
 
+#boxplot with the player salaries
+sal_boxplot <- ggplot() + 
+  geom_boxplot(data = Salaries, aes(x = yearID, y = salary, group = cut_width(yearID, 1)), alpha = 0.5) + 
+  geom_smooth(data = Salaries, aes(x = yearID, y = salary), method='lm', se=F) +
+  geom_line(data = sal_bb_stats, aes(x = yearID, y = salary_mean)) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = Salaries$yearID) +
+  labs(x = "Year", y = "Salary") 
+(sal_boxplot)
 
-```{r}
-players <- left_join(didAppear,People,by="playerID") %>% 
-  mutate(
-    bats = factor(bats, 
-                  levels = c("R","L","B"),
-                  labels= c("Right","Left","Both"), #3 possible outcomes
-                  ordered=T),#To get the legend of the plot in the right order
-    throws = factor(throws,
-                    levels = c("R","L"),
-                    labels = c("Right", "Left"), #only 2 possible outcomes
-                    ordered = T)#To get the legend of the plot in the right order
-  ) %>% 
-  rename("year" = yearID)
-
-#check if each playerID-by-year combination is unique
-players %>% 
-  count(playerID, year) %>% 
-  filter(n > 1)
+#graph with number of players per year
+sal_bb_nbplayers <- ggplot(data = sal_bb_stats, mapping = aes(x = yearID, y = n_players)) + 
+  geom_line() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = Salaries$yearID) +
+  labs(x = "Year", y = "Number of players")
+(sal_bb_nbplayers)
 ```
 
-##Batting Hand
-The table ```plrBats```contains each year's total number of observations for all three handedness categories (left, right, both; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
+##Salaries within the leagues
+Let's focus on the differences within the leagues. We have 2 leagues within the salaries data, the National League (NL) and the American League (AL). In the scatterplot we see, that the differences between the average salary and maximum salary grow with time, so this is not caused by any league paying highly more, although there are differences: The maximum gaining players of the NL earn more money than the ones from the AL (except for 2015 and 2016). 
+But over the average salaries, the AL pays more. 
+So if you're good, go the the AL - if you're the best, go to the NL. 
+The range, which tells us about the gap between the min and max salary of the players rose over time, and here we can see, that the least paid player gets a lot less compared to the maximum paid player in the AL than in the NL. 
 ```{r}
-plrBats <- players %>% 
-  group_by(year,bats) %>% #Ensures that we get the data for each year
-  count() %>%
-  ungroup() %>% 
-  drop_na() %>% #Drop observations for which the batting hand was not available
-  group_by(year) %>% 
-  mutate(
-    "N" = sum(n), #Get total number of observations for each year (irrespective of handedness category) 
-    "proportion" = round(n/sum(n),3)
-  ) %>% 
-  rename("observed" = n)
-plrBats
+#computing the stats for leagues 
+sal_bb_stats_lg <- Salaries %>%
+  group_by(yearID, lgID) %>%
+  summarise(n_players_lg = n(), 
+         salary_lg_mean = mean(salary),
+         salary_lg_max = max(salary),
+         salary_lg_min = min(salary),
+         salary_lg_median = quantile(salary, probs = 0.5)) %>%
+  mutate(salary_lg_100perc = (salary_lg_mean-min(salary_lg_mean)/max(salary_lg_mean)))
+(sal_bb_stats_lg)
+
+#graph with the salaries, grouped by league
+sal_lg <- 
+  ggplot(data = Salaries, mapping = aes(x = yearID, y = salary)) + 
+  geom_point(mapping = aes(color = lgID), alpha = "0.3", position = "jitter") + 
+  geom_smooth(method='lm', se=F) + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
+  labs(x = "Year", y = "Salary")
+(sal_lg)
+
+#graph with the salaries, grouped by league: boxplot
+#sal_lg_boxplot <- 
+  #ggplot(data = sal_bb_stats_lg, mapping = aes(x = yearID, y = salary)) + 
+  #geom_boxplot(aes(colour = lgID, group = cut_width(yearID, 1)), alpha = 0.5) + 
+  #theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  #scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
+  #labs(x = "Year", y = "Salary")
+
+#graph with number of players per year and league
+#ggplot(data = sal_bb_stats_lg, mapping = aes(x = yearID, y = n_players_lg)) + 
+  #geom_line(mapping = aes(color = lgID))+ 
+  #theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  #scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
+  #labs(x = "Year", y = "Number of players")
+
+#graph with average salaries per year and league
+sal_bb_stats_lg_mean <- 
+  ggplot(data = sal_bb_stats_lg, mapping = aes(x = yearID, y = salary_lg_mean)) + 
+  geom_line(mapping = aes(color = lgID)) +
+  geom_point(mapping = aes(color = lgID)) + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
+  labs(x = "Year", y = "Average salary (mean)")
+(sal_bb_stats_lg_mean)
+
+#graph with max, min and median and mean salary per year and league
+sal_bb_stats_lg_all <- 
+  ggplot(data = sal_bb_stats_lg, mapping = aes(shape = lgID, color = lgID), size = 10) +
+  geom_line(mapping = aes(x = yearID, y = salary_lg_max)) +
+  geom_line(mapping = aes(x = yearID, y = salary_lg_min)) + 
+  geom_line(mapping = aes(x = yearID, y = salary_lg_median)) +
+  geom_line(mapping = aes(x = yearID, y = salary_lg_mean)) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
+  labs(x = "Year", y ="Salary (max, min, median, mean)")
+(sal_bb_stats_lg_all)
+
+#Range of bb salaries in leagues
+sal_bb_stats_lg_range <-
+  ggplot(data = sal_bb_stats_lg, mapping = aes(color = lgID)) +
+  geom_line(mapping = aes(x = yearID, y = salary_lg_max-salary_lg_min)) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
+  labs(x = "Year", y = "Range of salaries in US$", 
+       title = "Range of salaries of baseball players by league")
+(sal_bb_stats_lg_range)
 ```
 
-##Plot  
-We figured that the number of observations a given year's proportional estimate is based upon may be an important piece of information. In order to include this information, we used ```ggplotly()``` as it allowed us to include N in ```plotly```'s own "hover text". 
-In more detail, we first created the ```ggplot```object ```batsPlot```  using ```geom_lines```to connect each year's proportions, with separate lines for each handedness category. Notice that we specified a third aesthetic "label = N" in addition to the x- and y-coordinates. This third aesthetic was necessary, as the ```tooltip```argument from ```ggplotly()``` can only display data that are specified as aesthetic arguments in the ```ggplot```object. 
-If you hover your cursor over any data point in the plot, a text element should pop up, displaying the year, the proportion and the total number of observations, N. To specify which aesthetics are displayed by ```ggplotly```, we provided the  ```tooltip``` argument with a string vector of the follwoing aesthetics: "year", "proportion", "N". 
-
+##Average baseball and US salaries
+The average baseball salaries increased a lot with time. Let's compare it to the average US salaries and see if they rose alike. 
+We can see, that the average salary of baseball players is a lot higher. To see the differences more, we compare the percentage rise over time. Starting at 1990 (because the US Salary data is not available for the years before), the average US wages increased about 25% until 2016, whereas the baseball players' salaries increased more than 85%. This is a huge difference. So, baseball probably became more popular or at least, people want to spend more on the games and the teams, the teams might have more money because of bigger sponsoring and so on. 
 
 ```{r}
-batPlot <- 
-  #aesthetic "label" is necessary for ggplotly's tooltip argument
-  ggplot(plrBats, aes(year, proportion, label = N))+ 
-  geom_line(aes(color=bats))+
-  scale_x_continuous(name="Year", breaks = seq(1871,2018,20))+
-  scale_y_continuous(breaks=seq(0,1,0.1))+
-  scale_color_brewer(palette="Set1")+
-  ylab("Proportion of Preferred Batting Hand")+
-  labs(color="Batting \n Hand")+
-  ggtitle("Proportional Distribution of Batting Hands")
+sal_bb_us <- left_join(sal_bb_stats_90, Salaries_US, by = "yearID")
+(sal_bb_us) 
 
-#Convert ggplot object into plotly object
-ggplotly(batPlot, tooltip = c("proportion", "year", "N")) 
+#graph with average salaries per year for bb
+sal_bb_us_av <- 
+  ggplot(data = sal_bb_us) + 
+  geom_point(mapping = aes(x = yearID, y = salary_mean), color = "forestgreen") + 
+  geom_smooth(mapping = aes(x = yearID, y = salary_mean), method='lm', se=F) + 
+  geom_point(mapping = aes(x = yearID, y = av_wage_US), color = "deeppink2") + 
+  geom_smooth(mapping = aes(x = yearID, y = av_wage_US), method='lm', se=F) + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = sal_bb_us$yearID) +
+  labs(x = "Year", y = "Average salary", title = "Average salary of baseballers and US citizens")
+(sal_bb_us_av)
+
+sal_bb_us_dev <- ggplot(data = sal_bb_us) + 
+  geom_point(mapping = aes(x = yearID, y = salary_mean_100perc), color = "forestgreen") + 
+  geom_smooth(mapping = aes(x = yearID, y = salary_mean_100perc), method='lm', se=F) + 
+  geom_point(mapping = aes(x = yearID, y = av_wage_100perc), color = "deeppink2") + 
+  geom_smooth(mapping = aes(x = yearID, y = av_wage_100perc), method='lm', se=F) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = sal_bb_us$yearID) +
+  labs(y = "Percentage rise in salary of baseballers and US citizens", title = "Salarydevelopment of baseballers and US citizens")
+(sal_bb_us_dev)
+```
+  
+##Mostpaid players and mostpaying teams
+
+The rise in the salaries was mainly conducted by some high earninig players - why do they get paid so much more than others? Are they better? To answer these questions the players with the largest salaries each year (after 2000, because after that year, the gap was getting a lot bigger) were chosen for further analysis. 
+```{r}
+salary_max <- Salaries %>%
+  filter(yearID > 1999) %>%
+  group_by(yearID) %>%
+  mutate(max_salary = max(salary)) %>%
+  subset(salary == max_salary) %>%
+  ungroup()
+(salary_max)
+
+mostpaid_players <- salary_max %>%
+  group_by(playerID) %>%
+  summarise(mostpaid_player = n()) %>%
+  ungroup()
+(mostpaid_players)
+
+mostpaying_teams <- salary_max %>%
+  group_by(teamID) %>%
+  summarise(mostpaying_team = n())
+(mostpaying_teams)
+
+sal_mostp_pl <- Salaries %>%
+  filter(playerID %in% c(salary_max$playerID))
+(sal_mostp_pl)
+
+sal_mostp_team <- Salaries %>%
+  filter(teamID %in% mostpaying_teams$teamID)
+(sal_mostp_team)
 
 ```
 
-##Throwing Hand  
-
-To obtain the proportions of left- and right-handed throwers for each year, we proceeded analogously to the more detailed account above. The table ```plrThrows``` contains the each year's total number of observations both handedness categories (left and right; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
-
+###Mostpaid players
 ```{r}
-plrThrows <- players %>% 
-  group_by(year,throws) %>% 
-  count() %>%
-  ungroup() %>% 
-  drop_na() %>% 
-  group_by(year) %>% 
-  mutate(
-    "N" = sum(n),
-    "proportion" = round(n/sum(n),3)
-  ) 
+sal_mostp_pl_all <- 
+  ggplot(data = sal_mostp_pl, mapping = aes(x = yearID, y = salary)) + 
+  geom_line(mapping = aes(color = playerID)) + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
+  labs(x = "Year", y = "Salary per player in US$")
+(sal_mostp_pl_all)  
 
 ```
 
-##Plot  
-Again, ```ggplotly()``` was used to add the number of total observations a given years proportional estimate is based upon as a text element.   
-
+###Mostpaid teams
 ```{r}
-throwPlot <- 
-  ggplot(plrThrows, aes(year, proportion, label = N))+
-  geom_line(aes(color=throws))+
-  scale_x_continuous(name="Year", breaks = seq(1871,2018,20))+
-  scale_y_continuous(breaks=seq(0,1,0.1))+
-  scale_color_brewer(palette="Set1")+
-  ylab("Proportion of Preferred Throwing Hand")+
-  labs(color="Throwing \n Hand")+
-  ggtitle("Proportional Distribution of Throwing Hands")
+sal_mostp_team_stat <- sal_mostp_team %>%
+  group_by(yearID, teamID) %>%
+  summarise(n_players = n(), 
+         salary_mean = mean(salary),
+         salary_max = max(salary),
+         salary_min = min(salary),
+         salary_median = quantile(salary, probs = 0.5)) %>%
+  mutate(salary_100perc = (salary_mean-min(salary_mean)/max(salary_mean)))
+(sal_mostp_team_stat)
 
-ggplotly(throwPlot,tooltip = c("proportion", "year", "N"))
-```  
+sal_mostp_teams_all <- 
+  ggplot(data = sal_mostp_team_stat) + 
+  geom_line(mapping = aes(x = yearID, y = salary_mean, color = teamID)) + 
+  geom_line(mapping = aes(x = yearID, y = salary_median, color = teamID)) + 
+  geom_line(mapping = aes(x = yearID, y = salary_max, color = teamID)) + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
+  labs(x = "Year", y = "Mean, max, median salary per team")
+(sal_mostp_teams_all)  
 
+```
