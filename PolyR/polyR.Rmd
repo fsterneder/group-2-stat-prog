@@ -17,6 +17,7 @@ output:
 
 ```{r setup, include=FALSE}
 library(knitr)
+library(tidyverse)
 opts_chunk$set(echo = TRUE,
                collapse = FALSE,
                comment = "",
@@ -27,8 +28,340 @@ opts_chunk$set(echo = TRUE,
                fig.align = "center")
 ```
 
-```{r include=FALSE}
-library(tidyverse)
-library(lubridate)
-library(stringr)
+# Explanations and drawings {.tabset .tabset-fade .tabset-pills}
+
+> Explain what every function does.  Importantly,  you need to include the environment in which the function is bound and the other variables in this environment.  Alternatively,  you  could  draw  a  picture  of  all  of  the  environments  which  enclose  functions which are bound in the expert list.  Both capture the same information (though the picture is more succinct)
+
+## makeBidderGeom
+
+This function constructs a list containing three functions and nested inside, a list which stores the current state. We have a bidAccepted function which increments the wealth value in the state, the bidRejected which decreases the wealth value and the bid function which implements the geometric behavior of the bid.
+
+```{r eval=F}
+makeBidderGeom = function(wealth=.05, frac = .5) {
+  list( 
+    state = function() { 
+      list(
+        wealth = wealth,
+        frac   = frac
+      ) 
+    },
+    bidAccepted = function(a) { wealth <<- wealth + a },
+    bidRejected = function(d) { wealth <<- wealth - d },
+    bid = function()  { ifelse(wealth > .0001, wealth*frac, wealth) }
+  )
+}
 ```
+
+## makeBidderConst
+
+See makeBidderGeom, almost the same besides the bid function which has a different (constant) bidding behavior and the state.
+
+```{r eval=F}
+makeBidderConst = function(wealth=.05, const=.01) {
+  list( 
+    state = function() { 
+      list(
+        wealth  = wealth,
+        const   = const
+      ) 
+    },
+    bidAccepted = function(a) { wealth <<- wealth + a },
+    bidRejected = function(d) { wealth <<- wealth - d },
+    bid = function()  { ifelse(wealth >= const, const, wealth) }  
+  )
+}
+```
+
+## makeRawSource
+
+This constructor handles the positions 
+
+```{r eval=F}
+makeRawSource <- function(ncolumns) {
+  activeColumns  = 0:ncolumns
+  position       = ncolumns
+  prevPosition   = NA
+  nactive        = ncolumns
+  
+  list(	
+    name = "Marginal",
+    state = function() { 
+      list(
+        position     = position, 
+        prevPosition = prevPosition,
+        active       = activeColumns,
+        nactive      = sum(!is.na(activeColumns[-1]))
+      )
+    },
+    generateFeature = function() { 
+      prevPosition  <<- position
+      position      <<- max(activeColumns[activeColumns < position], na.rm=T)
+      return(prevPosition) 
+    },
+    dropLastFeature = function() { activeColumns[prevPosition+1] <<- NA },
+    udPass = function() {
+      position <<- max(activeColumns, na.rm=T)
+      prevPosition <<- NA
+    }
+  )
+}
+```
+
+## makeExpert
+
+```{r eval=F}
+makeExpert <- function (bidder, constructor) {
+  list(	
+    name         = "Geom",
+    bidder       = bidder,
+    constructor  = constructor,
+    state        = function() { 
+      list(
+        wealth   = bidder$state()$wealth,
+        position = constructor$state()$position
+      )
+    },
+    bid          = function() { bidder$bid() },
+    feature      = function() { constructor$generateFeature() },
+    finishedPass = function() { constructor$state()$position == 0 },
+    finished     = function() { constructor$state()$nactive == 0 },
+    passTest     = function(a) {
+      bidder$bidAccepted(a)
+      constructor$dropLastFeature() 
+    },
+    pay          = function(payment) {
+      bidder$bidRejected(payment)
+    },
+    udPass       = function() { constructor$udPass() }
+  )
+}
+```
+
+## makeExpertGeom
+
+```{r eval=F}
+makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
+  makeExpert(
+    makeBidderGeom(wealth, frac),
+    makeRawSource(ncolumns)
+  )
+}
+```
+
+## environmentDrawing
+
+# Comment the code
+
+> Comment the code thoroughly. After part 1, you should understand how the code works.  Now comment it to help explain it to others.  Essentially every line should be commented. Remember, you aren’t explaining what the code does,  eg,  for line 42,  “ifelse checks the condition, bids wealth*frac if it holds, otherwise wealth.” Instead, explain why things are done as they are, eg, “ifelse statement ensures termination by eventually bidding remaining wealth”. Note that some things are worth explaining a bit of the how. For example, line 95, “+1 accounts for the zero at the beginning of the activeColumns vector”.
+
+```{r eval=F}
+makeBidderGeom = function(wealth=.05, frac = .5) {
+  list( 
+    state = function() { 
+      list(
+        wealth = wealth,
+        frac   = frac
+      ) 
+    },
+    bidAccepted = function(a) { wealth <<- wealth + a },
+    bidRejected = function(d) { wealth <<- wealth - d },
+    bid = function()  { ifelse(wealth > .0001, wealth*frac, wealth) }
+  )
+}
+
+makeBidderConst = function(wealth=.05, const=.01) {
+  list( 
+    state = function() { 
+      list(
+        wealth  = wealth,
+        const   = const
+      ) 
+    },
+    bidAccepted = function(a) { wealth <<- wealth + a },
+    bidRejected = function(d) { wealth <<- wealth - d },
+    bid = function()  { ifelse(wealth >= const, const, wealth) }  
+  )
+}
+makeRawSource <- function(ncolumns) {
+  activeColumns  = 0:ncolumns
+  position       = ncolumns
+  prevPosition   = NA
+  nactive        = ncolumns
+  
+  list(	
+    name = "Marginal",
+    state = function() { 
+      list(
+        position     = position, 
+        prevPosition = prevPosition,
+        active       = activeColumns,
+        nactive      = sum(!is.na(activeColumns[-1]))
+      )
+    },
+    generateFeature = function() { 
+      prevPosition  <<- position
+      position      <<- max(activeColumns[activeColumns < position], na.rm=T)
+      return(prevPosition) 
+    },
+    dropLastFeature = function() { activeColumns[prevPosition+1] <<- NA },
+    udPass = function() {
+      position <<- max(activeColumns, na.rm=T)
+      prevPosition <<- NA
+    }
+  )
+}
+
+makeExpert <- function (bidder, constructor) {
+  list(	
+    name         = "Geom",
+    bidder       = bidder,
+    constructor  = constructor,
+    state        = function() { 
+      list(
+        wealth   = bidder$state()$wealth,
+        position = constructor$state()$position
+      )
+    },
+    bid          = function() { bidder$bid() },
+    feature      = function() { constructor$generateFeature() },
+    finishedPass = function() { constructor$state()$position == 0 },
+    finished     = function() { constructor$state()$nactive == 0 },
+    passTest     = function(a) {
+      bidder$bidAccepted(a)
+      constructor$dropLastFeature() 
+    },
+    pay          = function(payment) {
+      bidder$bidRejected(payment)
+    },
+    udPass       = function() { constructor$udPass() }
+  )
+}
+
+makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
+  makeExpert(
+    makeBidderGeom(wealth, frac),
+    makeRawSource(ncolumns)
+  )
+}
+
+seed = 421232
+set.seed(seed) 
+nNull = 20; nNonNull = 20
+nulls = runif(nNull)
+nonNulls = runif(nNonNull, 0, .05)
+pvals = sample(c(nulls, nonNulls)) 
+
+omega = .1
+expert = makeExpertGeom(length(pvals), wealth=omega, frac=.1)
+rejectedHyp = list()
+pass = 1
+
+while (!expert$finished() && expert$state()$wealth > 0) {
+  index = expert$feature()
+  bid = expert$bidder$bid()
+  expert$pay(bid)
+  if (pvals[index] < bid) {
+    expert$passTest(omega)
+    rejectedHyp[[1+length(rejectedHyp)]] = index
+  }
+  if(expert$finishedPass()) {
+    expert$udPass()
+    pass = pass+1
+  }
+}
+rejectedHyp; pass
+pvals[unlist(rejectedHyp)]
+```
+
+# Why a list?
+
+> The state function returns the values of the private variables.  Why is this a function that returns a list and not just a list of the values of the private variables?
+
+If it would be a list the values wouldn't update and would only return the values at the initialization of the parent function. Let's take our constructor function and see how that works practice.
+
+```{r}
+makeRawSource <- function(ncolumns) {
+  activeColumns  = 0:ncolumns
+  position       = ncolumns
+  prevPosition   = NA
+  nactive        = ncolumns
+  
+  list(	
+    name = "Marginal",
+    state = function() { 
+      list(
+        position     = position, 
+        prevPosition = prevPosition,
+        active       = activeColumns,
+        nactive      = sum(!is.na(activeColumns[-1]))
+      )
+    },
+    generateFeature = function() { 
+      prevPosition  <<- position
+      position      <<- max(activeColumns[activeColumns < position], na.rm=T)
+      return(prevPosition) 
+    },
+    dropLastFeature = function() { activeColumns[prevPosition+1] <<- NA },
+    udPass = function() {
+      position <<- max(activeColumns, na.rm=T)
+      prevPosition <<- NA
+    }
+  )
+}
+
+makeRawSourceAlt <- function(ncolumns) {
+  activeColumns  = 0:ncolumns
+  position       = ncolumns
+  prevPosition   = NA
+  nactive        = ncolumns
+  
+  list(
+    name = "Marginal",
+    state = list(
+        position     = position, 
+        prevPosition = prevPosition,
+        active       = activeColumns,
+        nactive      = sum(!is.na(activeColumns[-1]))
+    ),
+    generateFeature = function() { 
+      prevPosition  <<- position
+      position      <<- max(activeColumns[activeColumns < position], na.rm=T)
+      return(prevPosition) 
+    },
+    dropLastFeature = function() { activeColumns[prevPosition+1] <<- NA },
+    udPass = function() {
+      position <<- max(activeColumns, na.rm=T)
+      prevPosition <<- NA
+    }
+  )
+}
+
+setn = 5
+testA <- makeRawSourceAlt(setn)
+testB <- makeRawSource(setn)
+
+testA$state
+testB$state()
+
+
+while(setn >= 0){
+   testA$generateFeature() 
+   testB$generateFeature() 
+   setn = setn-1
+}
+
+testA$state
+testB$state()
+```
+
+# Multiple experts
+
+> Generalize the code to use multiple experts (store the experts in a list).  While the code should be general, test it using two experts; one expert should use a geometric bidder and the other should use the constant bidder. Start each expert with wealth = omega/2.  The expert with the maximum bid “wins”, and gets to perform its test.  Note that each expert has private bidder and constructor objects (why?).  Only use one makeExpert function (you should pass it an argument for which bidder function to use).
+
+# Same Bidder
+
+>  Suppose I start the two experts from part 4 with the same constructor object.  How does this set of experts behave compared to the ones in part 4?  How does this help you design bidding strategies?
+
+# Single wealth object
+
+> Make  both  experts  from  the  part  d  use  a  single  wealth  object.   This will require you to create a separate wealth object that is passed to both of the bidders, and modify the bidder objects to change the wealth object appropriately.

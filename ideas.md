@@ -1,3 +1,39 @@
+# Final Project
+
+Sachen zusammenfügen --> Florian
+
+Leitfaden: 
+Was macht einen guten Baseballspieler oder ein gutes Baseballteam aus?
+
+## 0. Introduction --> Joe
+Datenherkunft, Motivation
+
+## 1. Überblick über Baseball-Facts: Vergleiche innerhalb der Teams, Players, mit der allgemeinen (US-)Bevölkerung, Zeitreihen 
+  a) Alter
+  b) Salary
+  c) Händigkeit
+--> Plots mit ggplotly
+Ev. auch hier schon die Frage: Was macht einen guten Baseball-Player oder -Team aus?
+
+Übergänge + Sortierung --> Andrea 
+
+## 2. Je ein Modell für Performance (mit WAR) und Alter/Salary/Händigkeit aus 2016. 
+Stargazer verwenden
+
+## 3. Ein gesamtes Modell für Performance und die drei Aspekte aus 2016. 
+Stargazer verwenden
+
+# Aufgabe 3: comment the code and so on 
+--> Florian (weiterhin), alle anderen schauen sich ihn auch weiter an. Kommentieren --> ev. Andrea 
+
+Nächstes Treffen: Sonntag, 10.2. 16:00 Uhr 
+
+
+
+
+
+
+
 # Handedness
 
 - L vs R? Who has the better stats? 
