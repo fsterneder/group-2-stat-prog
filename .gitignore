@@ -1,4 +1,5 @@
 *.html
+.DS_Store
 .RData
 Project/*.html
-.DS_Store
+Project/project_files
