@@ -16,6 +16,7 @@ setup$files <- c("AllstarFull","Appearances","AwardsManagers","AwardsPlayers",
                  "ManagersHalf","People","Pitching","Teams", "warPit",
                  "warPos", "Salaries_US", "Salaries")
 
+
 ## read all files from setup$files
 setup$data %<-% 
   (map(setup$files, function(f){
