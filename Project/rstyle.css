@@ -1,0 +1,68 @@
+h1 {
+   font-size:2.0em;
+   color: #446a8b;
+   font-weight: bolder;
+   padding-top: 0.2em;
+   text-transform: uppercase;
+}
+
+.title {
+  text-transform: none;
+  font-size: 2.2;
+}
+
+.subtitle {
+  font-style: normal;
+}
+
+.date {color: #394f5d;}
+.author {color: #394f5d;}
+
+h2 {
+   font-size:1.7em;
+   color: #394f5d;
+   font-weight: bolder;
+   padding-top: 0.1em;
+}
+
+h3 {
+   font-size:1.3em;   
+   color: #323135;
+   font-weight: bolder;
+   padding-top: 0.1em;
+}
+
+h4 {
+   font-size:1.0em;
+   color: #323135;
+   font-weight: bolder;   
+   padding-top: 0.1em;
+}
+
+h5 {
+   font-size:0.9em;
+   color: #323135;   
+   padding-top: 0.1em;
+}
+
+h6 {
+   font-size:0.8em;
+   color: #323135;   
+   padding-top: 0.1em;
+}
+
+
+.list-group-item.active, .list-group-item.active:hover {
+    background-color: #446a8b;
+}
+
+body{
+  background: linear-gradient(to bottom, #f9f9f9, #f7f7f7);
+}
+
+.svg-container {width: 100%;}
+.co {color: #555822;}
+.dv {color: #323135;}
+.kw {color: #985C59;}
+.op {color: #7484A1;}
+.st {color: #446a8b;}
