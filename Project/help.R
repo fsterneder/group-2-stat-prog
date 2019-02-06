@@ -10,11 +10,8 @@ library(plotly)
 setup <- list()
 
 # File Load
-setup$files <- c("AllstarFull","Appearances","AwardsManagers","AwardsPlayers",
-                 "AwardsShareManagers","AwardsSharePlayers","Batting",
-                 "BattingPost","CollegePlaying","Fielding","HallOfFame","Managers",
-                 "ManagersHalf","People","Pitching","Teams", "warPit",
-                 "warPos", "Salaries_US", "Salaries")
+setup$files <- c("Appearances", "People", "Teams", "warPit",
+                 "warPos", "Salaries", "Salaries_US")
 
 
 ## read all files from setup$files
