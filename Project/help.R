@@ -13,6 +13,7 @@ setup <- list()
 setup$files <- c("Appearances", "People", "Teams", "warPit",
                  "warPos", "Salaries", "Salaries_US")
 
+
 ## read all files from setup$files
 setup$data %<-% 
   (map(setup$files, function(f){
