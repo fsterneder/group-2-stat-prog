@@ -154,7 +154,7 @@ makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
 
 > Comment the code thoroughly. After part 1, you should understand how the code works.  Now comment it to help explain it to others.  Essentially every line should be commented. Remember, you aren’t explaining what the code does,  eg,  for line 42,  “ifelse checks the condition, bids wealth*frac if it holds, otherwise wealth.” Instead, explain why things are done as they are, eg, “ifelse statement ensures termination by eventually bidding remaining wealth”. Note that some things are worth explaining a bit of the how. For example, line 95, “+1 accounts for the zero at the beginning of the activeColumns vector”.
 
-```{r eval=F}
+```{r results="hide"}
 makeBidderGeom = function(wealth=.05, frac = .5) {
   list( 
     state = function() { 
@@ -277,82 +277,51 @@ pvals[unlist(rejectedHyp)]
 
 > The state function returns the values of the private variables.  Why is this a function that returns a list and not just a list of the values of the private variables?
 
-If it would be a list the values wouldn't update and would only return the values at the initialization of the parent function. Let's take our constructor function and see how that works practice.
+If it would be a list the values wouldn't update and would only return the values at the initialization of the parent function. Let's take our bidder function and see how that works practice.
 
 ```{r}
-makeRawSource <- function(ncolumns) {
-  activeColumns  = 0:ncolumns
-  position       = ncolumns
-  prevPosition   = NA
-  nactive        = ncolumns
-  
-  list(	
-    name = "Marginal",
-    state = function() { 
-      list(
-        position     = position, 
-        prevPosition = prevPosition,
-        active       = activeColumns,
-        nactive      = sum(!is.na(activeColumns[-1]))
-      )
-    },
-    generateFeature = function() { 
-      prevPosition  <<- position
-      position      <<- max(activeColumns[activeColumns < position], na.rm=T)
-      return(prevPosition) 
-    },
-    dropLastFeature = function() { activeColumns[prevPosition+1] <<- NA },
-    udPass = function() {
-      position <<- max(activeColumns, na.rm=T)
-      prevPosition <<- NA
-    }
-  )
-}
-
-makeRawSourceAlt <- function(ncolumns) {
-  activeColumns  = 0:ncolumns
-  position       = ncolumns
-  prevPosition   = NA
-  nactive        = ncolumns
-  
-  list(
-    name = "Marginal",
+makeBidderGeomNoFun = function(wealth=.05, frac = .5) {
+  list( 
     state = list(
-        position     = position, 
-        prevPosition = prevPosition,
-        active       = activeColumns,
-        nactive      = sum(!is.na(activeColumns[-1]))
-    ),
-    generateFeature = function() { 
-      prevPosition  <<- position
-      position      <<- max(activeColumns[activeColumns < position], na.rm=T)
-      return(prevPosition) 
-    },
-    dropLastFeature = function() { activeColumns[prevPosition+1] <<- NA },
-    udPass = function() {
-      position <<- max(activeColumns, na.rm=T)
-      prevPosition <<- NA
-    }
+      wealth = wealth,
+      frac   = frac
+    ), 
+    bidAccepted = function(a) { wealth <<- wealth + a },
+    bidRejected = function(d) { wealth <<- wealth - d },
+    bid = function()  { ifelse(wealth > .0001, wealth*frac, wealth) }
   )
 }
+```
+Again, the only difference to our old bidder function is that the state is now a list instead of a function. 
 
+```{r}
 setn = 5
-testA <- makeRawSourceAlt(setn)
-testB <- makeRawSource(setn)
+testA <- makeBidderGeom()
+testB <- makeBidderGeomNoFun()
 
-testA$state
-testB$state()
+state <- 
+  function() {
+    list(
+      hasFunction = testA$state()$wealth,
+      hasList = testB$state$wealth
+    )
+  }
 
+state()
+```
+As we can see we have the same starting values. Now let's take a loop which calls the `bidAccept` function and see what happens to the `state`.
 
+```{r}
 while(setn >= 0){
-   testA$generateFeature() 
-   testB$generateFeature() 
-   setn = setn-1
+  testA$bidAccepted(100) 
+  testB$bidAccepted(100) 
+  setn = setn-1
 }
 
-testA$state
-testB$state()
+state()
 ```
+
+We find that bidderFunction with a list as a state doesn't update and therefore would be unusable in a program.
 
 # Multiple experts
 
