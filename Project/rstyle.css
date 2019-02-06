@@ -56,11 +56,22 @@ h6 {
     background-color: #446a8b;
 }
 
+a {
+  color: #394f5d;
+}
+
+a[aria-expanded="true"]{
+  color: #446a8b;
+}
+
+a[aria-expanded="false"]{
+  color: #394f5d;
+}
+
 body{
   background: linear-gradient(to bottom, #f9f9f9, #f7f7f7);
 }
 
-.svg-container {width: 100%;}
 .co {color: #555822;}
 .dv {color: #323135;}
 .kw {color: #985C59;}
