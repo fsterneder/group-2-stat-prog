@@ -25,7 +25,8 @@ opts_chunk$set(echo = TRUE,
                warning = FALSE,
                messages = FALSE,
                out.width = "70%",
-               fig.align = "center")
+               fig.align = "center",
+               cache = TRUE)
 source("help.R")
 ```  
 #Proportions of Batting And Throwing Hands Since 1871  
