@@ -790,22 +790,26 @@ salaries16_players <- Salaries %>%
   filter(yearID == 2016) %>%
   group_by(playerID) %>%
   summarise(n_plID = n()) %>%
-  filter(n_plID == 1)
+  filter(n_plID == 1)%>%
+  print()
 #getting the salaries for all these players
 salaries16 <- Salaries %>%
   filter(yearID == 2016) %>%
-  filter(playerID %in% salaries16_players$n_plID)
+  filter(playerID %in% salaries16_players$playerID)%>%
+  print()
 
 #getting the names of the top5 earning players in 2016
 sal16_pl_top5 <- Salaries %>%
   filter(playerID %in% salaries16$playerID) %>%
-  arrange(desc(yearID), desc(salary))
+  arrange(desc(yearID), desc(salary))%>%
+  print()
 sal16_pl_top5 <- sal16_pl_top5[1:5,]
 
 #getting the development of the top5 earning players
 sal_mostp_pl_in16 <- Salaries %>%
   filter(playerID %in% sal16_pl_top5$playerID) %>%
-  arrange(desc(yearID), desc(salary))
+  arrange(desc(yearID), desc(salary))%>%
+  print()
 sal_mostp_pl_in16
 
 sal_mostp_pl_in16_plot <- ggplot(data = sal_mostp_pl_in16, mapping = aes(x = yearID, y = salary)) + 
@@ -815,7 +819,7 @@ sal_mostp_pl_in16_plot <- ggplot(data = sal_mostp_pl_in16, mapping = aes(x = yea
   scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
   labs(x = "Year", y = "Salary per player in million US$", 
        title = "Salaries of the mostpaid baseball-players over time")
-ggplotly(sal_mostp_pl_in16_plot)
+(sal_mostp_pl_in16_plot)
 ```
   
 ###High paid players - are they better? 
