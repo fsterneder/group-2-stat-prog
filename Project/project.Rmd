@@ -1,18 +1,17 @@
 ---
-title: "Baseball yay"
+title: "Baseball – Of Ages, Salaries and Handedness"
 subtitle: "Programming in Statistics - Project"
 author: "Vilsmeier Johannes, Sterneder Florian, Schaub Andrea"
 date: '`r Sys.Date()`'
 output:
   html_document:
     code_folding: hide
+    css: rstyle.css
+    number_sections: yes
     theme: cosmo
     highlight: tango
-    number_sections: true
-    toc: true
+    toc: yes
     toc_float: yes
-    fig_width: 7
-    fig_height: 4.5
 ---
 
 ```{r hide=T, warning=F, message=F}
@@ -31,19 +30,21 @@ source("help.R")
 
 ##Introduction   
 
-Sean Lahman's Baseball Database (Link: http://www.seanlahman.com/baseball-archive/statistics/) contains pitching, hitting, and fielding statistics for Major League Baseball (MLB) from 1871 through 2018 (for presumably every player that ever played, as well as every team that ever existed). 
+Sean Lahman's Baseball Database (Link: http://www.seanlahman.com/baseball-archive/statistics/) contains pitching, hitting, and fielding statistics for Major League Baseball (MLB) from 1871 through 2018 (for presumably every player that ever played, as well as every team that ever existed).
 
-Section 1 is concerened with handedness. More specifically, we ask whether the distribution of right-, left- and both-handed players has changed since the MLB's inception in 1871, and whether a player's expected value to his team differed as a function of handedness in a single season (2016).  
+Section 1 is concerened with handedness. More specifically, we asked whether the distribution of right-, left- and both-handed players has changed since the MLB's inception in 1871, and whether a player's expected value differs as a function of handedness. 
 
 In Section 2, we looked at the distribution of age and how a team's average age could be connected to its success (measured by wins). We also looked at the relationship between a player's age and the expected value to his team.  
 
-In Section 3, we looked at player salaries. How did player salaries change over years? Are there any differences between leagues with respect to player salaries? How much did the most paid players earn? How much did the most paying teams pay? And, how do baseball players salaries compare to the average US income?  
+Section 3 is all about player salaries. How did player salaries change over years? Are there any differences between leagues with respect to player salaries? How much did the highest paid players earn? How much did the highest paying teams pay? And, how do baseball players salaries compare to the average US income?  
 
-Finally, in section 4 we use handedness, age, and salary, and build a linear model to predict a player's expected value to his team given these covariates. 
+Finally, in section 4 we use handedness, age, and salary, and built a linear model to predict a player's expected value to his team given these covariates. 
 
-#Proportions of Batting And Throwing Hands Since 1871  
+#Of Handedness and Baseball  
 
-##Data Preparation   
+##Proportions of Batting And Throwing Hands Since 1871  
+
+###Data Preparation   
 
 Our aim was to compute and plot the proportions of left, right and - if applicable - both-handed players for each year. The ```People``` table from Lahman's Baseball database contains information on each player's preferred batting and throwing hand, while the ```Appearances``` table contains information on which players were active each year, since 1871. Thus, if a player was active in, say 1871, he should appear in the ```Appearances``` table and given the information on his preferred batting and throwing hand from the ```People``` table, we should be able to derive the number of right, left, or both-handed players that were active in a given year. 
 
@@ -113,7 +114,7 @@ players %>%
   filter(n > 1)
 ```
 
-##Batting Hand
+###Batting Hand
 The table ```plr_bats```contains each year's total number of observations across all three handedness categories (left, right, both; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
 ```{r}
 plr_bats <- players %>% 
@@ -130,7 +131,7 @@ plr_bats <- players %>%
 plr_bats
 ```
 
-##Plot  
+####Plot  
 We figured that the number of observations a given year's proportional estimate is based upon may be an important piece of information. In order to include this information, we used ```ggplotly()``` as this allowed for the inclusion of N in ```plotly```'s own "hover text". 
 In more detail, we first created the ```ggplot```object ```batsPlot```  using ```geom_lines```to connect each year's proportions, with separate lines for each handedness category. Notice that we specified a third aesthetic "label = N" in addition to the x- and y-coordinates. This third aesthetic was necessary, as the ```tooltip```argument from ```ggplotly()``` can only display data that are specified as aesthetic arguments in the ```ggplot```object. 
 If you hover your cursor over any data point in the plot, a text element should pop up, displaying the year, the proportion and the total number of observations, N. To specify which aesthetics are displayed by ```ggplotly```, we provided the  ```tooltip``` argument with a string vector of the follwoing aesthetics: "year", "proportion", "N". 
@@ -143,7 +144,7 @@ bat_plot <-
   geom_line(aes(color=bats))+
   scale_x_continuous(name="Year", breaks = seq(1871,2018,20))+
   scale_y_continuous(breaks=seq(0,1,0.1))+
-  scale_color_brewer(palette="Set1")+
+  scale_color_manual(values=c("#446A8B", "#555822", "#985C59"))+
   ylab("Proportion of Preferred Batting Hand")+
   labs(color="Batting \n Hand")+
   ggtitle("Proportional Distribution of Batting Hands")
@@ -154,7 +155,7 @@ ggplotly(bat_plot, tooltip = c("proportion", "yearID", "N"))
 ``` 
 The plot might have us think that the proportion of right handed batters first increased steeply between 1871 and 1876 (up to .88, while in the same time span, the proportion of left handed batters decreased in a similar fashion) and then decreased again until settling somewhere between 0.6 and 0.7 from 1900 onwards. However, this early rise and fall in the proportion of right handed batters does not necessarily represent a genuine trend but may simply reflect the degree of uncertainty in the proportional estimates that come with relatively small sample sizes, especially in the early years. For instance, the proportional estimates for 1871 are based on a total of $N = 48$ observations and if we take a look at the actual number of observations within each handedness group we will notice that there was only **one** both handed batter in our data frame in 1871.
 
-##Throwing Hand  
+###Throwing Hand  
 
 To obtain the proportions of left- and right-handed throwers for each year, we proceeded analogously to the more detailed account above. The table ```plr_throws``` contains each year's total number of observations for both handedness categories (left and right; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
 
@@ -172,7 +173,7 @@ plr_throws <- players %>%
 
 ```
 
-##Plot 
+####Plot 
 Again, ```ggplotly()``` was used to add the number of total observations a given year's proportional estimate is based upon as a text element.   
 
 ```{r}
@@ -181,7 +182,7 @@ throw_plot <-
   geom_line(aes(color=throws))+
   scale_x_continuous(name="Year", breaks = seq(1871,2018,20))+
   scale_y_continuous(breaks=seq(0,1,0.1))+
-  scale_color_brewer(palette="Set1")+
+  scale_color_manual(values=c("#446A8B", "#555822", "#985C59"))+
   ylab("Proportion of Preferred Throwing Hand")+
   labs(color="Throwing \n Hand")+
   ggtitle("Proportional Distribution of Throwing Hands")
@@ -203,7 +204,7 @@ The aim here is to compare position players' WAR statistics as a function of bat
 First, we used ```filter()``` to restrict our WAR and Appearances data tables to observations from the 2016 season. 
 ```{r}
 #Select subset of position players that played in 2016
-war_pos_2016 <- warPos %>% 
+war_pos_16 <- warPos %>% 
   filter(year_ID==2016)
 
 #Select subset of players that played in 2016
@@ -211,21 +212,21 @@ appearances_2016 <- Appearances %>%
   filter(yearID == 2016)  
 ```
 
-Next, we identified players who played for more than one team in 2016, the reason being is that these players would show up as multiple observations (i.e., multiple rows) in the ```war_Pos_2016``` data table. Also, we checked whether this conjecture of individual players showing up more than once in the table is in fact due to them playing for more than one team. 
+Next, we identified players who played for more than one team in 2016, the reason being is that these players would show up as multiple observations (i.e., multiple rows) in the ```war_pos_16``` data table. Also, we checked whether this conjecture of individual players showing up more than once in the table is in fact due to them playing for more than one team. 
 ```{r}
 #Show players that played for multiple teams in 2016
-war_pos_2016 %>% 
+war_pos_16 %>% 
   count(player_ID) %>% 
   arrange(desc(n)) %>% 
   filter(n>1)
 
-#Check if player_ID-by-teamID is a unique key in warPos2016
-war_pos_2016 %>% 
+#Check if player_ID-by-teamID is a unique key in war_pos_16
+war_pos_16 %>% 
   count(player_ID, team_ID) %>% 
   filter(n>1)
 ```  
 
-In order to merge ```war_pos_2016``` and ```appearances_2016``` we again needed matching primary and foreign key. Unfortunately, the column "playerID" in the ```appearances_2016``` table does not match the column "player_ID" in the ```war_pos_2016``` data table. There is, however, a column named "bbrefID" in ```People``` which corresponds to the "player_ID" column in ```warPos``` and ```war_Pit```. Note that the ```players``` table created earlier already contains the "bbrefID" column. Thus, we merged ```appearances_2016``` with ```players_2016``` (i.e., subset of ```players``` table containing observations from 2016 only) in order to add the "bbrefID" column.  
+In order to merge ```war_pos_16``` and ```appearances_2016``` we again needed matching primary and foreign key. Unfortunately, the column "playerID" in the ```appearances_2016``` table does not match the column "player_ID" in the ```war_pos_16``` data table. There is, however, a column named "bbrefID" in ```People``` which corresponds to the "player_ID" column in ```warPos``` and ```war_Pit```. Note that the ```players``` table created earlier already contains the "bbrefID" column. Thus, we merged ```appearances_2016``` with ```players_2016``` (i.e., subset of ```players``` table containing observations from 2016 only) in order to add the "bbrefID" column.  
 
 ```{r}
 #Get the bbrefID column
@@ -248,11 +249,11 @@ pos_2016 %>%
   filter(n>1)
 ```
 
-We then joined ```appearances_2016``` and ```warPos2016``` using player and team IDs as keys. 
+We then joined ```appearances_2016``` and ```war_pos_16``` using player and team IDs as keys. 
 ```{r}
-#Combine appearances_2016 and warPos2016 tables
+#Combine appearances_2016 and war_pos_16 tables
 pos_2016 <- pos_2016 %>% 
-  left_join(war_pos_2016, by = 
+  left_join(war_pos_16, by = 
               c(c("bbrefID" = "player_ID"), c("teamID"="team_ID"))) %>% 
   select(playerID, teamID, G_all, WAR, bats, throws)
 
@@ -261,9 +262,10 @@ pos_2016 %>%
   filter(n>1)
 ```
 
-For our linear models, we needed each player to be represented by exactly one row in the ```appearances_2016``` table (i.e., exactly one WAR per player). Since some players played for more than one team, and, for each team they had (slightly) different WARs we decided to weigh the player's WARs by the proportion of total games he played for each team and take the sum (i.e., a weighted mean WAR):
+For our linear models, we needed each player to be represented by exactly one row in the ```appearances_2016``` table (i.e., exactly one WAR per player). Since some players played for more than one team, and, for each team they had (slightly) different WARs we decided to weigh the player's WARs by the proportion of total games he played for each team and take the sum (i.e., a weighted mean WAR):  
+
 $$
-\text{weightedWAR}_i = \sum_{k=1}^{m}\frac{\text{number of games played for team }k }{\text{total number of games played}}\times WAR_k ,
+\text{weightedWAR}_i = \sum_{k=1}^{m}\frac{i\text{s number of games played for team }k }{i\text{s total number of games played}}\times WAR_{ik} ,
 $$  
 where $i$ refers to the $i$th player, and $k$ to the $k$th team he played for in 2016. Note that if a player's WAR for a given team was coded as ```NA```, the player's stint with that team was simply ignored in the computation. This step is reflected in the ```drop_na()``` command in the function ```wghtWAR()``` (see help.R file). 
 
@@ -337,14 +339,14 @@ stargazer(model_throws_pos, align = T, type = "html")
 
 
 ###Handedness and WAR for Pitchers
-Analogously to the previous section on handedness and WAR for position players, we first selected the subset of all players that were pitchers in 2016 from the ```warPit``` table as well as the subset of all players that appeared in 2016 from the ```Appearances``` table. We then added the column bbrefID from the ```players``` table to match the observations in ```appearances_2016``` with the observations in ```war_pit_2016```(see code). 
+Analogously to the previous section on handedness and WAR for position players, we first selected the subset of all players that were pitchers in 2016 from the ```warPit``` table as well as the subset of all players that appeared in 2016 from the ```Appearances``` table. We then added the column bbrefID from the ```players``` table to match the observations in ```appearances_2016``` with the observations in ```war_pit_16```(see code). 
 ```{r}
 #Select subset of pitchers that played in 2016
-war_pit_2016 <- warPit %>% 
+war_pit_16 <- warPit %>% 
   filter(year_ID==2016)
 
 #Check if player_ID, team_ID ist key
-war_pit_2016 %>% 
+war_pit_16 %>% 
   count(player_ID, team_ID) %>% 
   filter(n>1)
 
@@ -354,7 +356,7 @@ pit_2016 <- appearances_2016 %>%
 
 #Combine appearances_2016 and warPit2016 tables
 pit_2016 <- pit_2016 %>% 
-  left_join(war_pit_2016, by = 
+  left_join(war_pit_16, by = 
               c(c("bbrefID" = "player_ID"), c("teamID"="team_ID"))) %>% 
   select(playerID, teamID, G_all, WAR, bats, throws)
 
@@ -421,16 +423,14 @@ stargazer(model_throws_pit, align = T, type = "html")
 
 
 # Of Age and Baseball
+The first chapter analyzes the age of baseball players, focusing on the ones of 2016. First the average age is computed, then differences between the teams in their average players age are analyzed. At the end of this chapter, the questions "How old is a good baseball player?" or "Do they get better with age?" will be answered.   
 
-Let's anwers the simplest question first.
-
-## How old is the average active professional baseball player?
+##Age of the average active baseball player in 2016
 
 ```{r}
 age_calc <- function(from,to=now()) floor(difftime(to, from)/dyears(1))
 age_year = 2016
 age_const = paste0(age_year,"0403")
-
 age_c_players <- 
     left_join(Appearances %>% filter(yearID == age_year), People, "playerID") %>%
     mutate(birthDate = as_date(ymd(paste(birthYear, birthMonth, birthDay, sep = "-")))) %>%
@@ -438,58 +438,62 @@ age_c_players <-
     select(playerID, teamID, birthDate, age, nameFirst, nameLast, G_all, GS) 
 ```
 
-We define active as in "played this season" which in our case and dataset is the season of `r age_year`. Also we calculate the age with the start of the season (April 3rd).
+We define active as in played in season `r age_year`. Also we calculate the age with the start of the season (April 3rd).
 
 We find that the average active professional baseball player , in the season of `r age_year`, was born `r mean(age_c_players$birthDate)` and was therefore `r age_calc(mean(age_c_players$birthDate),ymd(age_const))` years old. 
 
 Let's visualize that.
 
 ```{r}
-age_c_players %>% 
+age_players_1 <- age_c_players %>% 
     ggplot(aes(x = age)) +
     geom_line(stat = "density") + 
-    geom_vline(aes(xintercept = mean(age)), alpha = 0.5, color = "red")
+    geom_vline(aes(xintercept = mean(age)), alpha = 0.5, color = "#3068A1")
+div(ggplotly(age_players_1), align = "center")
 ```
 
 Funfact: As we might be able to tell from the graph, the oldest player in the season of `r age_year` was `r age_calc(min(age_c_players$birthDate),ymd(age_const))`.
 
-Now we know about the average active player. Let's go further.
+Now we know more about the average active player in `r age_year`. Let's go further.
 
-## Does the age distribution differ significantly per team?
+##Differences in the age distribution per team
 
 ```{r}
 names(color$team_main) <- sort(unique(age_c_players$teamID))
-
 age_c_team <- age_c_players %>% 
    group_by(teamID) %>%
    summarise(meanAge = mean(age), medianAge = median(age)) %>%
    left_join(Teams %>% filter(yearID == age_year) %>% select(teamID,name,W,L,G), by = "teamID")
  
-age_c_team %>% 
+age_players_team_1 <- age_c_team %>% 
     ggplot(aes(reorder(teamID,meanAge), meanAge, color = teamID)) +
     geom_point(size = 2) + 
     scale_color_manual(values = color$team_main) +
     guides(color = FALSE) + 
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
+    coord_flip()
+div(ggplotly(age_players_team_1), align = "center")
 ```
-So now we know that the the team with the - on average - youngest players are the `r (age_c_team %>% filter(meanAge == min(meanAge)))$name` while the `r (age_c_team %>% filter(meanAge == max(meanAge)))$name` deploys -again, on average- the oldest players. But the difference between these 'extremes' is `r signif(max(age_c_team$meanAge) - min(age_c_team$meanAge),3)` and in my view not that siginificant. 
+So now we know that the the team with the - on average - youngest players are the `r (age_c_team %>% filter(meanAge == min(meanAge)))$name` while the `r (age_c_team %>% filter(meanAge == max(meanAge)))$name` deploys - again, on average - the oldest players. But the difference between these 'extremes' is `r signif(max(age_c_team$meanAge) - min(age_c_team$meanAge),3)` and in my view not that siginificant. 
 
 We still want to know more, let's look at the related boxplot.
 
 ```{r}
-age_c_players %>% 
+age_players_team_2 <- age_c_players %>% 
     left_join(age_c_team, by = "teamID") %>%
     ggplot(aes(reorder(teamID,meanAge),age,color = teamID)) +
     geom_boxplot(notch = TRUE) +
     scale_color_manual(values = color$team_main) +
     guides(color=FALSE) + 
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
+    coord_flip()
+div(ggplotly(age_players_team_2), align = "center")
 ```
 As we see, the IQR and Median isn't _that_ different between the teams. Maybe we can work out larger differences in the next question.
 
-## What happens to the average team age if we weight the games that each player played?
+##Weighted average team age
 
-The idea is to weight the playing time of each player and therefore see if teams rather put their faith in younger players or rather value experience. The formula we use to weigh each time is $$ \text{age}_p \frac{\text{games played}_p}{\frac{1}{n}\sum^n_{i=1}\text{games played}_i} $$
+The idea is to weight the playing time of each player and therefore see if teams rather put their faith in younger players or value experience. The formula we use to weigh each time is $$ \text{age}_p \frac{\text{games played}_p}{\frac{1}{n}\sum^n_{i=1}\text{games played}_i} $$
 
 ```{r}
 age_c_team <- 
@@ -504,69 +508,83 @@ age_c_team <-
    mutate(gProp = age*(G_all/G_avg), gsProp = age*(GS/GS_avg)) %>%
    summarise(weightByG = mean(gProp), weightByGS = mean(gsProp)) %>%
    left_join(age_c_team, "teamID")
-
 #kable(sample_n(age_c_team,5), format="markdown")
-
-age_c_team %>% 
+age_players_team_3 <- age_c_team %>% 
     ggplot(aes(reorder(teamID, meanAge), weightByG, color = teamID)) +
     geom_point(aes(reorder(teamID, meanAge), meanAge, color = teamID), size = 0.8) +
     geom_point(size = 2) + 
     scale_color_manual(values = color$team_main) +
     geom_segment(aes(xend = teamID, yend = meanAge)) +
     guides(color = FALSE) + 
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + 
+    coord_flip()
+div(ggplotly(age_players_team_3), align = "center")
 ```
 
 As we can can see, there are some differences if we weight the playing time, but most noticeable to me is that the shift is clearly toward more experienced players. To be exact, according to this new metric the average team is now `r signif(age_c_team %>% summarise(mean(weightByG-meanAge)),4)` years older which adds up to `r signif(age_c_team %>% summarise(sum(weightByG-meanAge)),4)` years in total for the whole league.
 
-## Linear Model - performance and average team age
+##Linear Model - performance and average team age
 
 ```{r}
 age_c_team <- age_c_team %>% mutate(Wprop = W/G)
 age_perf_mod <- lm(data=age_c_team, formula= Wprop ~ weightByG)
 age_c_team <- age_c_team %>% add_predictions(age_perf_mod) %>% add_residuals(age_perf_mod)
-
-age_c_team %>% ggplot(aes(weightByG)) + geom_point(aes(y=Wprop)) + geom_line(aes(y=pred),color="red")
-
-age_c_team %>% ggplot(aes(resid)) + geom_freqpoly(binwidth=0.04)
-
-age_c_team %>% ggplot(aes(weightByG, resid)) + geom_point()
+age_lm_1 <- age_c_team %>% 
+  ggplot(aes(weightByG)) + geom_point(aes(y=Wprop)) + geom_line(aes(y=pred),color="#3068A1")
+div(ggplotly(age_lm_1), align = "center")
+age_lm_2 <- age_c_team %>% 
+  ggplot(aes(resid)) + geom_freqpoly(binwidth=0.04)
+div(ggplotly(age_lm_2), align = "center")
+age_lm_3 <- age_c_team %>% 
+  ggplot(aes(weightByG, resid)) + geom_point()
+div(ggplotly(age_lm_3), align = "center")
 ```
 
 ```{r results="asis"}
 stargazer(age_perf_mod, align=T, type='html')
 ```
+#Text needed on lm age :) 
+#Text/Analysis needed on Performance of individuals as they age 
+##Performance of individuals as they age
 
-## performance of individuals as they age
+# Of Salaries and Baseball
+After looking at the average age of baseball players, we take a look on what they earn. Is it more/less depending on the league? How is the development compared to the average US-salary? After answering these questions, the mostpaid players in the 2000s and mostpaying teams in 2016 are also listed. The main questions, if a good baseball player also gets paid high, and if a team that spends much on their players, wins more, are asked at the end. 
 
-Adjusting the US-Salary statistics
+##Adjusting the statistics
+Before starting the analysis, we have to prepare our data. For the salaries, we have one table containing the average US-salaries from 1989-2017, and another table containing all baseball-players' salaries from 1989-2016. 
+
+###US-Salaries
 The statistics for the average wage in the US came from the OECD (https://data.oecd.org/earnwage/average-wages.htm#indicator-chart). Unfortunately, we didn't find more accurate data for the wages than the average. Be careful with interpreting the numbers, as with wages, the mean and the median differ a lot. 
 Within the dataset some columns were dropped, and the average development in percent was calculated. 
-```{r}
+```{r salaries_us_adjust}
 #renaming the columns
 colnames(Salaries_US) = c("country", "indicator", "subject", "currency", "frequency", "yearID", "av_wage_US", "Flag_codes")
 Salaries_US <- Salaries_US %>%
   #dropping columns
   subset(select = -c(country, indicator, subject, frequency, Flag_codes)) %>%
   #calculating average development
-  mutate(av_wage_perc = ((av_wage_US/lag(av_wage_US) - 1) * 100),
+  mutate(av_wage_US = av_wage_US/1000000,
+         av_wage_perc = ((av_wage_US/lag(av_wage_US) - 1) * 100),
          av_wage_100perc = ((av_wage_US-min(av_wage_US))/max(av_wage_US)))
 (Salaries_US)
 ```
   
-# Salaries
-Adjusting the Baseball-Salary statistics
+###Baseball-Salaries
 With the baseball salaries, some statistical values, like mean, max, min and median were calculated. Also the average development of the mean salary was computed to compare it to the US salaries. 
-```{r}
+```{r salaries_adjust}
+Salaries <- Salaries %>%
+  mutate(salary = salary/1000000)
+(Salaries)
 sal_bb_stats <- Salaries %>%
   group_by(yearID) %>%
   summarise(n_players = n(), 
-         n_dist_players = n_distinct(playerID),
-         salary_mean = mean(salary),
-         salary_max = max(salary),
-         salary_min = min(salary),
-         salary_median = quantile(salary, probs = 0.5))
-
+            n_teams = n_distinct(teamID),
+            n_dist_players = n_distinct(playerID),
+            salary_mean = mean(salary),
+            salary_max = max(salary),
+            salary_min = min(salary),
+            salary_median = quantile(salary, probs = 0.5))
+sal_bb_stats
 #
 sal_bb_stats_90 <- sal_bb_stats %>%
   filter(yearID >= 1990) %>%
@@ -574,37 +592,47 @@ sal_bb_stats_90 <- sal_bb_stats %>%
          salary_mean_100perc = ((salary_mean-min(salary_mean))/max(salary_mean))) 
 ```
   
-##Salaries overview
-The boxplot shows the median salary, and the first and third quantile. There are a lot of outliers. The regression line is around the mean salary, which is also shown. In 2000 there was a leap in the median salary, and in and after 2009, the highest salaries so far were payed. We're going to take a look on that afterwards. 
-
-```{r cache = T}
+##Overview
+The boxplot shows the median salary, and the first and third quantile. There are a lot of outliers, the mean salary is also shown. In 2000 there was a leap in the median salary, and in and after 2009, the highest salaries so far were payed. We're going to take a look at that afterwards. 
+```{r salaries_statistics, cache = T}
 summary(Salaries)
-
 #boxplot with the player salaries
 sal_boxplot <- ggplot() + 
   geom_boxplot(data = Salaries, aes(x = yearID, y = salary, group = cut_width(yearID, 1)), alpha = 0.5) + 
-  geom_smooth(data = Salaries, aes(x = yearID, y = salary), method='lm', se=F) +
-  geom_line(data = sal_bb_stats, aes(x = yearID, y = salary_mean)) +
+  geom_line(data = sal_bb_stats, aes(x = yearID, y = salary_mean), color = "#3068A1") +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   scale_x_continuous(breaks = Salaries$yearID) +
-  labs(x = "Year", y = "Salary") 
+  labs(x = "Year", y = "Salary in million US$", 
+       title = "Baseball-players' Salaries") 
 (sal_boxplot)
+```
+  
+###About missing data
 
+To find out about missing data, the number of players and teams was analyzed. Explicitly missing data is not stored in the tables we have, but there seems to be implicitly missing data. The number of players spikes a lot through the years, and there are also players, who got paid by more than one team a year, which can be seen in the difference between the number of players and the distinct number of players per year. As this analysis is about average salaries, we will keep all the data, because wheter somebody was paid twice or once does not matter. They played more, so they earned more. 
+```{r salaries_missing_data, cache = T}
 #graph with number of players per year
-sal_bb_nbplayers <- ggplot(data = sal_bb_stats, mapping = aes(x = yearID, y = n_players)) + 
-  geom_line() + 
+sal_bb_nbplayers <- ggplot(data = sal_bb_stats) + 
+  geom_line(mapping = aes(x = yearID, y = n_dist_players), color = "#384F5d") +
+  geom_line(mapping = aes(x = yearID, y = n_players), color = "#3068A1") + 
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   scale_x_continuous(breaks = Salaries$yearID) +
-  labs(x = "Year", y = "Number of players")
-(sal_bb_nbplayers)
+  labs(x = "Year", y = "Number of players", 
+       title = "Number of players with salary information each year")
+div(ggplotly(sal_bb_nbplayers), align = "center")
+#graph with number of teams per year
+sal_bb_nbteams <- ggplot(data = sal_bb_stats, mapping = aes(x = yearID, y = n_teams)) + 
+  geom_line(color = "#3068A1") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = Salaries$yearID) +
+  labs(x = "Year", y = "Number of teams", 
+       title = "Number of Teams with salary information each year")
+div(ggplotly(sal_bb_nbteams), align = "center")
 ```
 
 ##Salaries within the leagues
-Let's focus on the differences within the leagues. We have 2 leagues within the salaries data, the National League (NL) and the American League (AL). In the scatterplot we see, that the differences between the average salary and maximum salary grow with time, so this is not caused by any league paying highly more, although there are differences: The maximum gaining players of the NL earn more money than the ones from the AL (except for 2015 and 2016). 
-But over the average salaries, the AL pays more. 
-So if you're good, go the the AL - if you're the best, go to the NL. 
-The range, which tells us about the gap between the min and max salary of the players rose over time, and here we can see, that the least paid player gets a lot less compared to the maximum paid player in the AL than in the NL. 
-```{r}
+Let's focus on the differences within the leagues. We have 2 leagues within the salaries data, the National League (NL) and the American League (AL). In the scatterplot we see, that the differences between the average salary and maximum salary grow with time, so this is not caused by any league paying highly more, although there are differences: The maximum gaining players of the AL earn more money than the ones from the NL (except for 2015 and 2016). 
+```{r salaries_lg}
 #computing the stats for leagues 
 sal_bb_stats_lg <- Salaries %>%
   group_by(yearID, lgID) %>%
@@ -615,100 +643,81 @@ sal_bb_stats_lg <- Salaries %>%
          salary_lg_median = quantile(salary, probs = 0.5)) %>%
   mutate(salary_lg_100perc = (salary_lg_mean-min(salary_lg_mean)/max(salary_lg_mean)))
 (sal_bb_stats_lg)
-
 #graph with the salaries, grouped by league
 sal_lg <- 
   ggplot(data = Salaries, mapping = aes(x = yearID, y = salary)) + 
   geom_point(mapping = aes(color = lgID), alpha = "0.3", position = "jitter") + 
-  geom_smooth(method='lm', se=F) + 
+  geom_smooth(method='lm', se=F, color = "#93adc8") + 
+  scale_color_manual(values=c("#446a8b", "#985c59")) +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
-  labs(x = "Year", y = "Salary")
+  labs(x = "Year", y = "Salary in million US$",
+       title = "Baseball-players' salaries, grouped by league")
 (sal_lg)
-
-#graph with the salaries, grouped by league: boxplot
-#sal_lg_boxplot <- 
-  #ggplot(data = sal_bb_stats_lg, mapping = aes(x = yearID, y = salary)) + 
-  #geom_boxplot(aes(colour = lgID, group = cut_width(yearID, 1)), alpha = 0.5) + 
-  #theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
-  #scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
-  #labs(x = "Year", y = "Salary")
-
-#graph with number of players per year and league
-#ggplot(data = sal_bb_stats_lg, mapping = aes(x = yearID, y = n_players_lg)) + 
-  #geom_line(mapping = aes(color = lgID))+ 
-  #theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
-  #scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
-  #labs(x = "Year", y = "Number of players")
-
-#graph with average salaries per year and league
-sal_bb_stats_lg_mean <- 
-  ggplot(data = sal_bb_stats_lg, mapping = aes(x = yearID, y = salary_lg_mean)) + 
-  geom_line(mapping = aes(color = lgID)) +
-  geom_point(mapping = aes(color = lgID)) + 
+```
+  
+Over the average salaries (despite looking at the mean or the median), the AL also pays more. Looking at range, which tells us about the gap between the minimum and maximum salary of the players, we can see, that the gap was increasing over time. Also the range was higher in the AL until 2014, where the AL range dropped and the NL range continued to rise.  
+```{r salaries_lg_mean}
+#graph with median and mean salary per year and league
+sal_bb_stats_lg_all <- sal_bb_stats_lg %>%
+  gather(key="statistics_type", value = "salary", salary_lg_mean, salary_lg_median) %>%
+  ggplot(mapping = aes(shape = lgID), size = 10) +
+  geom_line(mapping = aes(x = yearID, y = salary, color = lgID)) +
+  scale_color_manual(values=c("#446a8b", "#985c59")) +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
-  labs(x = "Year", y = "Average salary (mean)")
-(sal_bb_stats_lg_mean)
-
-#graph with max, min and median and mean salary per year and league
-sal_bb_stats_lg_all <- 
-  ggplot(data = sal_bb_stats_lg, mapping = aes(shape = lgID, color = lgID), size = 10) +
-  geom_line(mapping = aes(x = yearID, y = salary_lg_max)) +
-  geom_line(mapping = aes(x = yearID, y = salary_lg_min)) + 
-  geom_line(mapping = aes(x = yearID, y = salary_lg_median)) +
-  geom_line(mapping = aes(x = yearID, y = salary_lg_mean)) +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
-  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
-  labs(x = "Year", y ="Salary (max, min, median, mean)")
-(sal_bb_stats_lg_all)
-
+  labs(x = "Year", y ="Salary (median, mean) in million US$",
+       title = "Median and mean salary per year and league")
+stat_type_names <- c(salary_lg_median = "Median Salary", salary_lg_mean = "Mean Salary")
+(sal_bb_stats_lg_all)+facet_wrap(vars(statistics_type), nrow=2, labeller = as_labeller(stat_type_names))
 #Range of bb salaries in leagues
-sal_bb_stats_lg_range <-
+sal_bb_stats_lg_range <- 
   ggplot(data = sal_bb_stats_lg, mapping = aes(color = lgID)) +
   geom_line(mapping = aes(x = yearID, y = salary_lg_max-salary_lg_min)) +
+  scale_color_manual(values=c("#446a8b", "#985c59")) +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
-  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
-  labs(x = "Year", y = "Range of salaries in US$", 
-       title = "Range of salaries of baseball players by league")
-(sal_bb_stats_lg_range)
+  scale_x_continuous(breaks = sal_bb_stats_lg$yearID, labels = scales::comma) +
+  labs(x = "Year", y = "Range of salaries in mllion US$", 
+       title = "Range of baseball players' salaries by league")
+div(ggplotly(sal_bb_stats_lg_range), align = "center")
 ```
 
-##Average baseball and US salaries
+##Compared to US-salaries
 The average baseball salaries increased a lot with time. Let's compare it to the average US salaries and see if they rose alike. 
 We can see, that the average salary of baseball players is a lot higher. To see the differences more, we compare the percentage rise over time. Starting at 1990 (because the US Salary data is not available for the years before), the average US wages increased about 25% until 2016, whereas the baseball players' salaries increased more than 85%. This is a huge difference. So, baseball probably became more popular or at least, people want to spend more on the games and the teams, the teams might have more money because of bigger sponsoring and so on. 
 
-```{r}
+```{r salaries_comparison_us} {.tabset}
 sal_bb_us <- left_join(sal_bb_stats_90, Salaries_US, by = "yearID")
 (sal_bb_us) 
-
 #graph with average salaries per year for bb
 sal_bb_us_av <- 
   ggplot(data = sal_bb_us) + 
-  geom_point(mapping = aes(x = yearID, y = salary_mean), color = "forestgreen") + 
-  geom_smooth(mapping = aes(x = yearID, y = salary_mean), method='lm', se=F) + 
-  geom_point(mapping = aes(x = yearID, y = av_wage_US), color = "deeppink2") + 
-  geom_smooth(mapping = aes(x = yearID, y = av_wage_US), method='lm', se=F) + 
+  geom_point(mapping = aes(x = yearID, y = salary_mean), color = "#446A8B") + 
+  geom_smooth(mapping = aes(x = yearID, y = salary_mean), color = "#748CA1", method='lm', se=F) + 
+  geom_point(mapping = aes(x = yearID, y = av_wage_US), color = "#555822") + 
+  geom_smooth(mapping = aes(x = yearID, y = av_wage_US), color = "#969656", method='lm', se=F) + 
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   scale_x_continuous(breaks = sal_bb_us$yearID) +
-  labs(x = "Year", y = "Average salary", title = "Average salary of baseballers and US citizens")
-(sal_bb_us_av)
-
+  labs(x = "Year", y = "Average salary in million US$", 
+       title = "Average salary of baseballers and US citizens")
+div(ggplotly(sal_bb_us_av), align = "center")
 sal_bb_us_dev <- ggplot(data = sal_bb_us) + 
-  geom_point(mapping = aes(x = yearID, y = salary_mean_100perc), color = "forestgreen") + 
-  geom_smooth(mapping = aes(x = yearID, y = salary_mean_100perc), method='lm', se=F) + 
-  geom_point(mapping = aes(x = yearID, y = av_wage_100perc), color = "deeppink2") + 
-  geom_smooth(mapping = aes(x = yearID, y = av_wage_100perc), method='lm', se=F) +
+  geom_point(mapping = aes(x = yearID, y = salary_mean_100perc), color = "#446A8B") + 
+  geom_smooth(mapping = aes(x = yearID, y = salary_mean_100perc), color = "#748CA1", method='lm', se=F) + 
+  geom_point(mapping = aes(x = yearID, y = av_wage_100perc), color = "#555822") + 
+  geom_smooth(mapping = aes(x = yearID, y = av_wage_100perc), color = "#969656", method='lm', se=F) +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   scale_x_continuous(breaks = sal_bb_us$yearID) +
-  labs(y = "Percentage rise in salary of baseballers and US citizens", title = "Salarydevelopment of baseballers and US citizens")
-(sal_bb_us_dev)
+  labs(x = "Year", y = "% rise in salary of baseballers and US citizens", 
+       title = "Salarydevelopment of baseballers and US citizens")
+div(ggplotly(sal_bb_us_dev), align = "center")
 ```
   
-##Mostpaid players and mostpaying teams
+##Mostpaid players
 
-The rise in the salaries was mainly conducted by some high earninig players - why do they get paid so much more than others? Are they better? To answer these questions the players with the largest salaries each year (after 2000, because after that year, the gap was getting a lot bigger) were chosen for further analysis. 
-```{r}
+The rise in the salaries was mainly conducted by some high earninig players - why do they get paid so much more than others? Are they better? To answer these questions the players with the largest salaries each year (after 2000, where the gap was getting a lot bigger) were chosen for further analysis. 
+```{r salaries_mostp_pl_teams}
+#calculating the players with the max salary since 1999
 salary_max <- Salaries %>%
   filter(yearID > 1999) %>%
   group_by(yearID) %>%
@@ -716,60 +725,285 @@ salary_max <- Salaries %>%
   subset(salary == max_salary) %>%
   ungroup()
 (salary_max)
-
+#checking how often somebody was mostpaid
 mostpaid_players <- salary_max %>%
   group_by(playerID) %>%
   summarise(mostpaid_player = n()) %>%
   ungroup()
 (mostpaid_players)
-
-mostpaying_teams <- salary_max %>%
-  group_by(teamID) %>%
-  summarise(mostpaying_team = n())
-(mostpaying_teams)
-
+#getting the salary development of the max paid players (2000-2016)
 sal_mostp_pl <- Salaries %>%
-  filter(playerID %in% c(salary_max$playerID))
+  filter(playerID %in% (salary_max$playerID))
 (sal_mostp_pl)
-
-sal_mostp_team <- Salaries %>%
-  filter(teamID %in% mostpaying_teams$teamID)
-(sal_mostp_team)
-
 ```
 
-###Mostpaid players
-```{r}
+###Over time
+The two most earning players in 2015 and 2016 (Greinza01 and Kershcl01) were quite new in the game, whereas rodrial01 was the mostpaid player for a long time. Brownke01, playing until 2005, had a long career before he was most paid. After getting most money, he didnt develop anymore, his salary stayed the same. Giambja01 and Ramirma01 had a similar development in salary, with Ramirma01 getting less between 2007 and 2009 and then earning more again. 
+```{r salaries_mostpaid_players}
 sal_mostp_pl_all <- 
   ggplot(data = sal_mostp_pl, mapping = aes(x = yearID, y = salary)) + 
   geom_line(mapping = aes(color = playerID)) + 
+  geom_point(mapping = aes(color = playerID))+
+  scale_color_manual(values = c("#A7C4E3", "#74a9cf", "#4B88C8", "#0570b0", "#446a8b", "#323135")) +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
-  labs(x = "Year", y = "Salary per player in US$")
-(sal_mostp_pl_all)  
+  labs(x = "Year", y = "Salary per player in million US$", 
+       title = "Salaries of the mostpaid baseball-players over time")
+(sal_mostp_pl_all)
+```
+  
+###In 2016
 
+Let's also take a look at the most paid players in 2016 and their development. We filter the salaries table for data on 2016 and then get the playerIDs. We take all those players and arrange them descending to get the ones with the most salaries on top. Then we take the top 5 rows, using [1:5,]. For the development of the players, we take the Salaries table and look for the top5-earning players. 
+  
+Greinza01 and Kershcl01, most earning in 2015 and 2016, had a shorter career comparing to the others. Also Greinza01 had the highest salary to start with. The other players have been playing in Major League Baseball for at least 10 years before getting paid more than 25 million US$.  
+
+```{r sal16_most_players}
+#getting salaries for only 2016
+salaries16 <- Salaries %>%
+  filter(yearID == 2016)
+#getting the names of the top10 earning players in 2016
+sal16_pl_top5 <- Salaries %>%
+  filter(playerID %in% salaries16$playerID) %>%
+  arrange(desc(yearID), desc(salary))
+sal16_pl_top5 <- sal16_pl_top5[1:5,]
+#getting the development of the top10 earning players
+sal_mostp_pl_in16 <- Salaries %>%
+  filter(playerID %in% sal16_pl_top5$playerID) %>%
+  arrange(desc(yearID), desc(salary))
+sal_mostp_pl_in16
+sal_mostp_pl_in16_plot <- ggplot(data = sal_mostp_pl_in16, mapping = aes(x = yearID, y = salary)) + 
+  geom_line(mapping = aes(color = playerID)) + 
+  scale_color_manual(values = c("#A7C4E3", "#74a9cf", "#4B88C8", "#446a8b", "#323135")) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
+  labs(x = "Year", y = "Salary per player in million US$", 
+       title = "Salaries of the mostpaid baseball-players over time")
+ggplotly(sal_mostp_pl_in16_plot)
+```
+  
+###High paid players - are they better? 
+
+To find out about the relationship of salary and being a good player we'll construct a linear model. We will compare the players' salaries to the Wins above replacement for position players and for pitching. To shorten the code, we make a function to calculate our linear model. 
+```{r lm_function}
+lm_own <- function(df, y1, x1, txt_y, txt_x, txt_title, plot = T) {
+  #formula has to be done seperately
+  #otherwise the lm would take either the names "y1" and "x1" without finding columns
+  #or find the columns df[[y1]] and df[[x1]] but using y1 and x1 also as names 
+  f <- as.formula(paste(y1, x1, sep = "~"))
+  lm_df <- lm(formula = f, data = df)
+  
+  if(plot == T) {
+    #adding the predictions and residuals
+    df <- df %>%
+    add_predictions(lm_df) %>%
+    add_residuals(lm_df)
+  
+    #plotting the data
+    lm_df_plot <- df %>%
+    #refering to the columns with df[[x|y1]]
+    ggplot(aes(df[[x1]])) +
+    geom_point(aes(y=df[[y1]])) +
+    #adding the prediction line
+    geom_line(aes(y=pred), color = "#3068A1") +
+    #naming the axes and title
+    labs(x = txt_x, y = txt_y, title = txt_title)}
+  else{return(lm_df)}
+}
 ```
 
-###Mostpaid teams
+For the model, we also need to prep our data. We make two tables, one containing WARpos and the other WARpit. We use an inner join to keep the rows with data on both salary and war, and use an anti-join to see what data we've lost. 
+```{r salaries16_prep}
+#using an inner join to only hold the rows with WAR and salary
+salaries16_pl_warPos <- inner_join(salaries16, pos_2016, "playerID")
+(anti_join(salaries16, pos_2016, "playerID"))
+(anti_join(pos_2016, salaries16, "playerID"))
+#using an inner join to only hold the rows with WAR and salary
+salaries16_pl_warPit <- inner_join(salaries16, pit_2016, "playerID")
+#using anti_joins in both directions to see the data loss
+(anti_join(salaries16, pit_2016, "playerID") %>% print())
+(anti_join(pit_2016, salaries16, "playerID") %>% print())
+```
+  
+####Salary and Wins above replacement
+Then we start the modeling. First we look at how WAR affects the salary. 
+```{r lm_war_salary}
+lm_warpos_salary <- lm_own(salaries16_pl_warPos, "salary", "weightedWAR", 
+                           "Salary in million US$", "Wins above replacement (pos. players)", 
+                           "Linear model on the player's salary and \n
+                           Wins above Replacement for position players")
+(lm_warpos_salary)
+lm_warpit_salary <- lm_own(salaries16_pl_warPit, "salary", "weightedWAR", 
+                           "Salary in million US$", "Wins above replacement (pitching)", 
+                           "Linear model on the player's salary and \n
+                           Wins above Replacement for pitching")
+(lm_warpit_salary)
+```
+  
+####Wins above replacement and salary  
+Then we look the other direction: What influence has the salary on WAR?
+```{r lm_salary_war}
+lm_salary_warpos <- lm_own(salaries16_pl_warPos, "weightedWAR", "salary",
+                           "Wins above replacement (pos. players)", "Salary in million US$", 
+                           "Linear model on Wins above Replacement for position players \n
+                           and the player's salary")
+(lm_salary_warpos)
+lm_salary_warpit <- lm_own(salaries16_pl_warPit, "weightedWAR", "salary",
+                           "Wins above replacement (pitching)", "Salary in million US$", 
+                           "Linear model on Wins above Replacement for pitching \n
+                           and the player's salary")
+(lm_salary_warpit)
+```
+```{r comparing_salary_war}
+lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary)
+stargazer(lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary),
+          type = "HTML")
+```
+
+
+##Mostpaying teams
+
+###2016's Top 5 over time
+To find out more about the mostpaying teams, we take the Top 5 from 2016 and look at their development.
+BOS, DET, LAN, NYA and TEX spent the most money on their players in 2016. Looking at their development, the NYA paid a lot more since 2002. LAN had a big rise in 2013, and TEX had less money between 2004 and 2010. As we know, that the number of players with salary information is not constant, changes in the salary sum can be due to the changing number of players. We also looked at the mean, and the development is similar - therefore we chose to stick to the graph with 
+  
+  
 ```{r}
-sal_mostp_team_stat <- sal_mostp_team %>%
+#getting the top5 most spending teams
+mostpaying_teams <- Salaries %>%
+  filter(yearID == 2016) %>%
   group_by(yearID, teamID) %>%
-  summarise(n_players = n(), 
-         salary_mean = mean(salary),
-         salary_max = max(salary),
-         salary_min = min(salary),
-         salary_median = quantile(salary, probs = 0.5)) %>%
-  mutate(salary_100perc = (salary_mean-min(salary_mean)/max(salary_mean)))
-(sal_mostp_team_stat)
-
-sal_mostp_teams_all <- 
-  ggplot(data = sal_mostp_team_stat) + 
-  geom_line(mapping = aes(x = yearID, y = salary_mean, color = teamID)) + 
-  geom_line(mapping = aes(x = yearID, y = salary_median, color = teamID)) + 
-  geom_line(mapping = aes(x = yearID, y = salary_max, color = teamID)) + 
+  summarise(salary_sum = sum(salary)) %>%
+  arrange(desc(salary_sum))
+mostpaying_teams <- mostpaying_teams[1:5,]
+#getting all data on those teams, calculating the sum and average salary
+mostpaying_teams_dev <- Salaries %>%
+  filter(teamID %in% mostpaying_teams$teamID) %>%
+  group_by(yearID, teamID) %>%
+  summarise(salary_sum = sum(salary), 
+            salary_mean = mean(salary))
+#plotting the sum of salaries
+sal_mostp_teams_sum <- 
+  ggplot(data = mostpaying_teams_dev) + 
+  geom_line(mapping = aes(x = yearID, y = salary_sum, color = teamID)) + 
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_color_manual(values = c("#A7C4E3", "#74a9cf", "#4B88C8", "#446a8b", "#323135")) +
   scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
-  labs(x = "Year", y = "Mean, max, median salary per team")
-(sal_mostp_teams_all)  
+  labs(x = "Year", y = "Money spent on players per team in million US$",
+       title = "Money spent on players per team (5 most paying teams)")
+div(ggplotly(sal_mostp_teams_sum), align = "center")
+#plotting the average salary
+sal_mostp_teams_mean <- 
+  ggplot(data = mostpaying_teams_dev) + 
+  geom_line(mapping = aes(x = yearID, y = salary_mean, color = teamID)) + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_color_manual(values = c("#A7C4E3", "#74a9cf", "#4B88C8", "#446a8b", "#323135")) +
+  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
+  labs(x = "Year", y = "Mean salary paid per team in million US$",
+       title = "Mean salary paid per team (5 most paying teams)")
+div(ggplotly(sal_mostp_teams_mean), align = "center")
+```
+  
+###Mostpaying teams - do they win more? 
+For the teams, we also want to analyze if the teams paying high salaries for their players also win the most. For this we will use the Wins per Games from the Age table. The tables are joined together by a left_join. 
 
+```{r sal_teams_prep}
+salaries16_teams <- salaries16 %>%
+  group_by(teamID) %>%
+  summarise(n_players = n(), 
+            sal_min = min(salary),
+            sal_max_prop = max(salary)/sum(salary),
+            sal_median = median(salary),
+            sal_mean = mean(salary),
+            sal_sum = sum(salary))
+salaries16_teams_games <- inner_join(salaries16_teams,  
+                                    (Teams %>% filter(yearID == age_year) %>% 
+                                               select(teamID,G, W, L) %>% 
+                                               mutate(Wprop = W/G)),
+                                     "teamID")
+salaries16_teams_games
+(anti_join((Teams %>% filter(yearID == age_year) %>% 
+                      select(teamID,G, W, L)) %>% 
+                      mutate(Wprop = W/G), salaries16_teams, "teamID"))
+            
+(anti_join(salaries16_teams, 
+           (Teams %>% filter(yearID == age_year) %>% 
+                      select(teamID,G, W, L) %>% 
+                      mutate(Wprop = W/G)), 
+           "teamID"))
+```
+  
+####Salary and Win proportion
+
+Then we construct the linear model with our formula. We look at the median, maximum and sum spent. 
+  
+```{r sal_teams_wprop}
+#linear model for the median salary per team
+salaries16_teams_med <- lm_own(salaries16_teams_games, "Wprop", "sal_median", 
+                               "% Games won", "Median player's salary in million US$ per team", "Linear model of the % Games won \n
+                               and median salary per team")
+(salaries16_teams_med)
+#linear model for the maximum salary per team 
+salaries16_teams_max_prop <- lm_own(salaries16_teams_games, "Wprop", "sal_max_prop", 
+                                    "% Games won", "Proportion of Maximum player's salary in million US$ per team", "Linear model of the % Games won \n
+                                    and proportion of maximum salary per team")
+(salaries16_teams_max_prop)
+#linear model for the sum of salaries paid per team 
+salaries16_teams_sum <- lm_own(salaries16_teams_games, "Wprop", "sal_sum", 
+                               "% Games won", "Money spent on players in million US$ per team", "Linear model of the % Games won \n
+                               and Money spent on players per team")
+(salaries16_teams_sum)
+```
+  
+####Win proportion and Salary
+
+```{r sal_teams_sal_wprop}
+#linear model for the median salary per team
+salaries16_wprop_med <- lm_own(salaries16_teams_games, "sal_median", "Wprop", "Median player's salary in million US$ per team", "% Games won", "Linear model of the median salary per team and % Games won")
+(salaries16_wprop_med)
+#linear model for the maximum salary per team 
+salaries16_wprop_max_prop <- lm_own(salaries16_teams_games, "sal_max_prop", "Wprop", "Proportion of Maximum player's salary in % per team", "% Games won", "Linear model of the proportion of maximum salary per team and % Games won")
+(salaries16_wprop_max_prop)
+#linear model for the sum of salaries paid per team 
+salaries16_wprop_sum <- lm_own(salaries16_teams_games, "sal_sum", "Wprop", "Money spent on players in million US$ per team", "% Games won", "Linear model of the Money spent on players per team and % Games won")
+(salaries16_wprop_sum)
+```
+
+
+#Of Age, Salaries and Handedness
+The last chapter looks at all the factors described above, and figures out the relation between age, salary and handedness and the baseball-player's success. The sucess of a baseball player is measured by the Wins Above Replacement (WAR). 
+
+##Linear Model
+
+
+```{r}
+df16 <- inner_join(salaries16_pl_warPos, age_c_players, by = c("playerID","teamID"))
+
+finalModel <- lm(weightedWAR~bats+age+salary, data=df16)
+
+df16 %>% 
+  add_predictions(finalModel) %>% 
+  add_residuals(finalModel) %>% 
+  ggplot()+
+  geom_point(aes(age,resid))+
+  facet_wrap(~bats)
+
+df16 %>% 
+  add_predictions(finalModel) %>% 
+  add_residuals(finalModel) %>% 
+  ggplot()+
+  geom_point(aes(salary,resid))+
+  scale_x_log10()+
+  facet_wrap(~bats)
+  
+
+#preparing the data
+baseball16_bat <- inner_join(salaries16, age_c_players, by = c("playerID", "teamID")) %>%
+  print() 
+  #hier noch inner_join mit handedness (bat) hinzufügen
+anti_join(salaries16, age_c_players, by = c("playerID", "teamID")) #drop 48 rows (41 without teamID)
+anti_join(age_c_players, salaries16, by = c("playerID", "teamID")) #drop 677 rows (581 without teamID)
+baseball16_throw <- inner_join(salaries16, age_c_players, by = c("playerID", "teamID")) %>%
+  print() 
+  #hier noch inner_join mit handedness (throw) hinzufügen
 ```

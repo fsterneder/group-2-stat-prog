@@ -4,6 +4,7 @@ library(zeallot)
 library(modelr)
 library(stargazer)
 library(plotly)
+library(htmltools)
 
 #### helper functions ####
 
