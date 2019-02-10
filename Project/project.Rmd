@@ -28,6 +28,19 @@ opts_chunk$set(echo = TRUE,
                fig.align = "center")
 source("help.R")
 ```  
+
+##Introduction   
+
+Sean Lahman's Baseball Database (Link: http://www.seanlahman.com/baseball-archive/statistics/) contains pitching, hitting, and fielding statistics for Major League Baseball (MLB) from 1871 through 2018 (for presumably every player that ever played, as well as every team that ever existed). 
+
+Section 1 is concerened with handedness. More specifically, we ask whether the distribution of right-, left- and both-handed players has changed since the MLB's inception in 1871, and whether a player's expected value to his team differed as a function of handedness in a single season (2016).  
+
+In Section 2, we looked at the distribution of age and how a team's average age could be connected to its success (measured by wins). We also looked at the relationship between a player's age and the expected value to his team.  
+
+In Section 3, we looked at player salaries. How did player salaries change over years? Are there any differences between leagues with respect to player salaries? How much did the most paid players earn? How much did the most paying teams pay? And, how do baseball players salaries compare to the average US income?  
+
+Finally, in section 4 we use handedness, age, and salary, and build a linear model to predict a player's expected value to his team given these covariates. 
+
 #Proportions of Batting And Throwing Hands Since 1871  
 
 ##Data Preparation   
@@ -278,6 +291,7 @@ pos_2016 %>%
   xlab("Batting Hand")+
   ylab("Weighted Average WAR")+
   ggtitle("Position Players: WAR by Batting Hand")
+
 ```
 The scatter plot indicates that for position players, on average, right, left and both handed batters do not differ with respect to WAR.  
 
@@ -285,12 +299,13 @@ Let's build a linear model to obtain a closer look. We chose right-handed batter
 $$
 \widehat{y}_i = \widehat{\beta}_0+\widehat{\beta}_1 Left_i+\widehat{\beta}_2 Both_i
 $$
+
 ```{r}
-modelBatsPos <- lm(weightedWAR~bats, data = pos_2016)
+model_bats_pos <- lm(weightedWAR~bats, data = pos_2016)
 ```
 
 ```{r results = "asis"}
-stargazer(modelBatsPos, type = "html", align = T)
+stargazer(model_bats_pos, type = "html", align = T)
 ```
 
 
@@ -313,11 +328,11 @@ $$
 \widehat{y}_i = \widehat{\beta}_0+\widehat{\beta}_1 Left_i
 $$  
 ```{r}
-modelThrowsPos <- lm(weightedWAR~throws, data = pos_2016)
+model_throws_pos <- lm(weightedWAR~throws, data = pos_2016)
 ```
 
 ```{r results = "asis"}
-stargazer(modelThrowsPos, align = T, type = "html")
+stargazer(model_throws_pos, align = T, type = "html")
 ```
 
 
