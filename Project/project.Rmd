@@ -785,19 +785,29 @@ Let's also take a look at the most paid players in 2016 and their development. W
 Greinza01 and Kershcl01, most earning in 2015 and 2016, had a shorter career comparing to the others. Also Greinza01 had the highest salary to start with. The other players have been playing in Major League Baseball for at least 10 years before getting paid more than 25 million US$.  
 
 ```{r sal16_most_players}
-#getting salaries for only 2016
+#getting players for only 2016, players with more than one salary will be excluded
+salaries16_players <- Salaries %>%
+  filter(yearID == 2016) %>%
+  group_by(playerID) %>%
+  summarise(n_plID = n()) %>%
+  filter(n_plID == 1)
+#getting the salaries for all these players
 salaries16 <- Salaries %>%
-  filter(yearID == 2016)
-#getting the names of the top10 earning players in 2016
+  filter(yearID == 2016) %>%
+  filter(playerID %in% salaries16_players$n_plID)
+
+#getting the names of the top5 earning players in 2016
 sal16_pl_top5 <- Salaries %>%
   filter(playerID %in% salaries16$playerID) %>%
   arrange(desc(yearID), desc(salary))
 sal16_pl_top5 <- sal16_pl_top5[1:5,]
-#getting the development of the top10 earning players
+
+#getting the development of the top5 earning players
 sal_mostp_pl_in16 <- Salaries %>%
   filter(playerID %in% sal16_pl_top5$playerID) %>%
   arrange(desc(yearID), desc(salary))
 sal_mostp_pl_in16
+
 sal_mostp_pl_in16_plot <- ggplot(data = sal_mostp_pl_in16, mapping = aes(x = yearID, y = salary)) + 
   geom_line(mapping = aes(color = playerID)) + 
   scale_color_manual(values = c("#A7C4E3", "#74a9cf", "#4B88C8", "#446a8b", "#323135")) +
