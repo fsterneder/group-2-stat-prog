@@ -551,7 +551,6 @@ age_lm_2 <- age_c_team %>%
   ggplot(aes(resid)) + geom_freqpoly(binwidth=0.04)
 div(ggplotly(age_lm_2), align = "center")
 
-
 age_lm_3 <- age_c_team %>% 
   ggplot(aes(weightByG, resid)) + geom_point()
 div(ggplotly(age_lm_3), align = "center")
@@ -593,7 +592,6 @@ Salaries <- Salaries %>%
   mutate(salary = salary/1000000)
 (Salaries)
 
-
 sal_bb_stats <- Salaries %>%
   group_by(yearID) %>%
   summarise(n_players = n(), 
@@ -613,9 +611,9 @@ sal_bb_stats_90 <- sal_bb_stats %>%
   
 ##Overview
 The boxplot shows the median salary, and the first and third quantile. There are a lot of outliers, the mean salary is also shown. In 2000 there was a leap in the median salary, and in and after 2009, the highest salaries so far were payed. We're going to take a look at that afterwards. 
-<<<<<<< HEAD
 ```{r salaries_statistics, cache = T}
 summary(Salaries)
+
 #boxplot with the player salaries
 sal_boxplot <- ggplot() + 
   geom_boxplot(data = Salaries, aes(x = yearID, y = salary, group = cut_width(yearID, 1)), alpha = 0.5) + 
@@ -630,7 +628,6 @@ sal_boxplot <- ggplot() +
 ###About missing data
 
 To find out about missing data, the number of players and teams was analyzed. Explicitly missing data is not stored in the tables we have, but there seems to be implicitly missing data. The number of players spikes a lot through the years, and there are also players, who got paid by more than one team a year, which can be seen in the difference between the number of players and the distinct number of players per year. As this analysis is about average salaries, we will keep all the data, because wheter somebody was paid twice or once does not matter. They played more, so they earned more. 
-<<<<<<< HEAD
 ```{r salaries_missing_data, cache = T}
 #graph with number of players per year
 sal_bb_nbplayers <- ggplot(data = sal_bb_stats) + 
@@ -665,6 +662,7 @@ sal_bb_stats_lg <- Salaries %>%
          salary_lg_median = quantile(salary, probs = 0.5)) %>%
   mutate(salary_lg_100perc = (salary_lg_mean-min(salary_lg_mean)/max(salary_lg_mean)))
 (sal_bb_stats_lg)
+
 #graph with the salaries, grouped by league
 sal_lg <- 
   ggplot(data = Salaries, mapping = aes(x = yearID, y = salary)) + 
@@ -676,6 +674,7 @@ sal_lg <-
   labs(x = "Year", y = "Salary in million US$",
        title = "Baseball-players' salaries, grouped by league")
 (sal_lg)
+
 ```
   
 Over the average salaries (despite looking at the mean or the median), the AL also pays more. Looking at range, which tells us about the gap between the minimum and maximum salary of the players, we can see, that the gap was increasing over time. Also the range was higher in the AL until 2014, where the AL range dropped and the NL range continued to rise.  
@@ -712,6 +711,7 @@ We can see, that the average salary of baseball players is a lot higher. To see 
 ```{r salaries_comparison_us} {.tabset}
 sal_bb_us <- left_join(sal_bb_stats_90, Salaries_US, by = "yearID")
 (sal_bb_us) 
+
 #graph with average salaries per year for bb
 sal_bb_us_av <- 
   ggplot(data = sal_bb_us) + 
@@ -776,7 +776,6 @@ sal_mostp_pl_all <-
   labs(x = "Year", y = "Salary per player in million US$", 
        title = "Salaries of the mostpaid baseball-players over time")
 (sal_mostp_pl_all)
-
 ```
   
 ###In 2016
