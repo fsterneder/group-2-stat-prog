@@ -48,9 +48,9 @@ Finally, in section 4 we use handedness, age, and salary, and built a linear mod
 
 ###Data Preparation   
 
-Our aim was to compute and plot the proportions of left, right and - if applicable - both-handed players for each year. The ```People``` table from Lahman's Baseball database contains information on each player's preferred batting and throwing hand, while the ```Appearances``` table contains information on which players were active each year, since 1871. Thus, if a player was active in, say 1871, he should appear in the ```Appearances``` table and given the information on his preferred batting and throwing hand from the ```People``` table, we should be able to derive the number of right, left, or both-handed players that were active in a given year. 
+Our aim was to compute and plot the proportions of left, right and - if applicable - both-handed players for each year. The `People` table from Lahman's Baseball database contains information on each player's preferred batting and throwing hand, while the `Appearances` table contains information on which players were active each year, since 1871. Thus, if a player was active in, say 1871, he should appear in the `Appearances` table and given the information on his preferred batting and throwing hand from the `People` table, we should be able to derive the number of right, left, or both-handed players that were active in a given year. 
 
-Unfortunately, a simple join of the ```People```and ```Appearances``` tables via the intended primary and foreign key "playerID" is not possible, since a given player can be listed multiple times in the ```Appearances``` table. This is usually due to players switching teams midseason. If a player switched teams, he will appear as many times in the ```Appearances``` table as the number of teams he played for that year. It follows that if we joined ```Appearances```and ```People``` and computed the number/proportion of players for each handedness category and year, we would count some players more than once. 
+Unfortunately, a simple join of the `People`and `Appearances` tables via the intended primary and foreign key "playerID" is not possible, since a given player can be listed multiple times in the `Appearances` table. This is usually due to players switching teams midseason. If a player switched teams, he will appear as many times in the `Appearances` table as the number of teams he played for that year. It follows that if we joined `Appearances`and `People` and computed the number/proportion of players for each handedness category and year, we would count some players more than once. 
 
 ```{r}
 #Check number of observations per player and year
@@ -58,7 +58,7 @@ Appearances %>%
   count(playerID, yearID) %>% 
   filter(n > 1)
 ```  
-We solved this issue by creating a new table ```did_appear``` which indicates whether a player appeared at least once in a given year (i.e., there's only one row per year and player).
+We solved this issue by creating a new table `did_appear` which indicates whether a player appeared at least once in a given year (i.e., there's only one row per year and player).
 
 ```{r}
 did_appear <- 
@@ -76,7 +76,7 @@ did_appear %>%
   count(playerID, yearID) %>% 
   filter(n > 1)
 ```  
-The ```People``` table already comes with a primary key in "playerID".
+The `People` table already comes with a primary key in "playerID".
 
 ```{r}
 People %>% 
@@ -85,7 +85,7 @@ People %>%
 ```
 
 
-We used ```left_join()``` to combine the ```did_appear``` and the ```People``` tables. The variable "playerID" served as primary and foreign key. In the resulting table, ```players```, each row corresponds to a unique year-by-player combination. A player's preferred batting hand is encoded in the variable "bats", while his preferred throwing hand is encoded in the variable "throws". We changed these variables from type "character" to type "factor".
+We used `left_join()` to combine the `did_appear` and the `People` tables. The variable "playerID" served as primary and foreign key. In the resulting table, `players`, each row corresponds to a unique year-by-player combination. A player's preferred batting hand is encoded in the variable "bats", while his preferred throwing hand is encoded in the variable "throws". We changed these variables from type "character" to type "factor".
 
 Unfortunately, the "throws" variable contained a single observation with the value "S" (instead of "R", or "L"). Since there was no mentioning of outcome "S" in the description of Lahman's baseball database, we concluded that this must be a typo or some other mistake. Therefore "S" was changed to "NA". 
 
@@ -117,7 +117,7 @@ players %>%
 ```
 
 ###Batting Hand
-The table ```plr_bats```contains each year's total number of observations across all three handedness categories (left, right, both; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
+The table `plr_bats`contains each year's total number of observations across all three handedness categories (left, right, both; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
 ```{r}
 plr_bats <- players %>% 
   group_by(yearID,bats) %>% #Ensures that we get the data for each year
@@ -134,9 +134,9 @@ plr_bats
 ```
 
 ####Plot  
-We figured that the number of observations a given year's proportional estimate is based upon may be an important piece of information. In order to include this information, we used ```ggplotly()``` as this allowed for the inclusion of N in ```plotly```'s own "hover text". 
-In more detail, we first created the ```ggplot```object ```batsPlot```  using ```geom_lines```to connect each year's proportions, with separate lines for each handedness category. Notice that we specified a third aesthetic "label = N" in addition to the x- and y-coordinates. This third aesthetic was necessary, as the ```tooltip```argument from ```ggplotly()``` can only display data that are specified as aesthetic arguments in the ```ggplot```object. 
-If you hover your cursor over any data point in the plot, a text element should pop up, displaying the year, the proportion and the total number of observations, N. To specify which aesthetics are displayed by ```ggplotly```, we provided the  ```tooltip``` argument with a string vector of the follwoing aesthetics: "year", "proportion", "N". 
+We figured that the number of observations a given year's proportional estimate is based upon may be an important piece of information. In order to include this information, we used `ggplotly()` as this allowed for the inclusion of N in `plotly`'s own "hover text". 
+In more detail, we first created the `ggplot`object `batsPlot`  using `geom_lines`to connect each year's proportions, with separate lines for each handedness category. Notice that we specified a third aesthetic "label = N" in addition to the x- and y-coordinates. This third aesthetic was necessary, as the `tooltip`argument from `ggplotly()` can only display data that are specified as aesthetic arguments in the `ggplot`object. 
+If you hover your cursor over any data point in the plot, a text element should pop up, displaying the year, the proportion and the total number of observations, N. To specify which aesthetics are displayed by `ggplotly`, we provided the  `tooltip` argument with a string vector of the follwoing aesthetics: "year", "proportion", "N". 
 
 
 ```{r}
@@ -159,7 +159,7 @@ The plot might have us think that the proportion of right handed batters first i
 
 ###Throwing Hand  
 
-To obtain the proportions of left- and right-handed throwers for each year, we proceeded analogously to the more detailed account above. The table ```plr_throws``` contains each year's total number of observations for both handedness categories (left and right; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
+To obtain the proportions of left- and right-handed throwers for each year, we proceeded analogously to the more detailed account above. The table `plr_throws` contains each year's total number of observations for both handedness categories (left and right; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
 
 ```{r}
 plr_throws <- players %>% 
@@ -176,7 +176,7 @@ plr_throws <- players %>%
 ```
 
 ####Plot 
-Again, ```ggplotly()``` was used to add the number of total observations a given year's proportional estimate is based upon as a text element.   
+Again, `ggplotly()` was used to add the number of total observations a given year's proportional estimate is based upon as a text element.   
 
 ```{r}
 throw_plot <- 
@@ -196,14 +196,14 @@ Again, the plot might have us think that the proportion of right handed throwers
 ##Wins Above Replacement and Hand Preference in 2016     
 
 Wins Above Replacement (WAR) is an often used "sabermetric" to quantify how valuable a given player is to his team's success. It is the number of a team's additional wins that are due to the player as compared to the number of expected wins if the player had been replaced by a hypothetical average player. The computation of WAR is quite complex, and, depending on whether we're dealing with a position player or a pitcher, WAR is computed differently. Luckily, baseball-reference.com provides WAR statistics for (alledgedly) every player that has ever played in the league taking into account a player's position (i.e., there are two data tables: One for position players and one for pitchers; Link: https://www.baseball-reference.com/about/war_explained.shtml).  
-We downloaded Baseball Reference's "War for Position Players" (```warPos```) and "War for Pitchers" (```warPit```) tables and combined these with Lahman's baseball data bank to use WAR as the outcome variable of our linear models (see below).   
+We downloaded Baseball Reference's "War for Position Players" (`warPos`) and "War for Pitchers" (`warPit`) tables and combined these with Lahman's baseball data bank to use WAR as the outcome variable of our linear models (see below).   
 
 All of our linear models were restricted in that we only used data from the 2016 season. 
 
 ###Handedness and WAR for Position Players  
 The aim here is to compare position players' WAR statistics as a function of batting and throwing hand. 
 
-First, we used ```filter()``` to restrict our WAR and Appearances data tables to observations from the 2016 season. 
+First, we used `filter()` to restrict our WAR and Appearances data tables to observations from the 2016 season. 
 ```{r}
 #Select subset of position players that played in 2016
 war_pos_16 <- warPos %>% 
@@ -214,7 +214,7 @@ appearances_2016 <- Appearances %>%
   filter(yearID == 2016)  
 ```
 
-Next, we identified players who played for more than one team in 2016, the reason being is that these players would show up as multiple observations (i.e., multiple rows) in the ```war_pos_16``` data table. Also, we checked whether this conjecture of individual players showing up more than once in the table is in fact due to them playing for more than one team. 
+Next, we identified players who played for more than one team in 2016, the reason being is that these players would show up as multiple observations (i.e., multiple rows) in the `war_pos_16` data table. Also, we checked whether this conjecture of individual players showing up more than once in the table is in fact due to them playing for more than one team. 
 ```{r}
 #Show players that played for multiple teams in 2016
 war_pos_16 %>% 
@@ -228,7 +228,7 @@ war_pos_16 %>%
   filter(n>1)
 ```  
 
-In order to merge ```war_pos_16``` and ```appearances_2016``` we again needed matching primary and foreign key. Unfortunately, the column "playerID" in the ```appearances_2016``` table does not match the column "player_ID" in the ```war_pos_16``` data table. There is, however, a column named "bbrefID" in ```People``` which corresponds to the "player_ID" column in ```warPos``` and ```war_Pit```. Note that the ```players``` table created earlier already contains the "bbrefID" column. Thus, we merged ```appearances_2016``` with ```players_2016``` (i.e., subset of ```players``` table containing observations from 2016 only) in order to add the "bbrefID" column.  
+In order to merge `war_pos_16` and `appearances_2016` we again needed matching primary and foreign key. Unfortunately, the column "playerID" in the `appearances_2016` table does not match the column "player_ID" in the `war_pos_16` data table. There is, however, a column named "bbrefID" in `People` which corresponds to the "player_ID" column in `warPos` and `war_Pit`. Note that the `players` table created earlier already contains the "bbrefID" column. Thus, we merged `appearances_2016` with `players_2016` (i.e., subset of `players` table containing observations from 2016 only) in order to add the "bbrefID" column.  
 
 ```{r}
 #Get the bbrefID column
@@ -251,7 +251,7 @@ pos_2016 %>%
   filter(n>1)
 ```
 
-We then joined ```appearances_2016``` and ```war_pos_16``` using player and team IDs as keys. 
+We then joined `appearances_2016` and `war_pos_16` using player and team IDs as keys. 
 ```{r}
 #Combine appearances_2016 and war_pos_16 tables
 pos_2016 <- pos_2016 %>% 
@@ -264,15 +264,15 @@ pos_2016 %>%
   filter(n>1)
 ```
 
-For our linear models, we needed each player to be represented by exactly one row in the ```appearances_2016``` table (i.e., exactly one WAR per player). Since some players played for more than one team, and, for each team they had (slightly) different WARs we decided to weigh the player's WARs by the proportion of total games he played for each team and take the sum (i.e., a weighted mean WAR):  
+For our linear models, we needed each player to be represented by exactly one row in the `appearances_2016` table (i.e., exactly one WAR per player). Since some players played for more than one team, and, for each team they had (slightly) different WARs we decided to weigh the player's WARs by the proportion of total games he played for each team and take the sum (i.e., a weighted mean WAR):  
 
 $$
 \text{weightedWAR}_i = \sum_{k=1}^{m}\frac{i\text{s number of games played for team }k }{i\text{s total number of games played}}\times WAR_{ik} ,
 $$  
-where $i$ refers to the $i$th player, and $k$ to the $k$th team he played for in 2016. Note that if a player's WAR for a given team was coded as ```NA```, the player's stint with that team was simply ignored in the computation. This step is reflected in the ```drop_na()``` command in the function ```wghtWAR()``` (see help.R file). 
+where $i$ refers to the $i$th player, and $k$ to the $k$th team he played for in 2016. Note that if a player's WAR for a given team was coded as `NA`, the player's stint with that team was simply ignored in the computation. This step is reflected in the `drop_na()` command in the function `wghtWAR()` (see help.R file). 
 
 
-In order to apply the ```wghtWAR()``` function to each player, we first nested WAR within players. We then used ```lapply()``` to compute the weighedWAR statistic for each player. 
+In order to apply the `wghtWAR()` function to each player, we first nested WAR within players. We then used `lapply()` to compute the weighedWAR statistic for each player. 
 ```{r warning=F}
 #Nest number of WAR-osbervations by players
 pos_2016 <- nest(pos_2016, c(G_all,teamID), key = "WAR")
@@ -341,7 +341,7 @@ stargazer(model_throws_pos, align = T, type = "html")
 
 
 ###Handedness and WAR for Pitchers
-Analogously to the previous section on handedness and WAR for position players, we first selected the subset of all players that were pitchers in 2016 from the ```warPit``` table as well as the subset of all players that appeared in 2016 from the ```Appearances``` table. We then added the column bbrefID from the ```players``` table to match the observations in ```appearances_2016``` with the observations in ```war_pit_16```(see code). 
+Analogously to the previous section on handedness and WAR for position players, we first selected the subset of all players that were pitchers in 2016 from the `warPit` table as well as the subset of all players that appeared in 2016 from the `Appearances` table. We then added the column bbrefID from the `players` table to match the observations in `appearances_2016` with the observations in `war_pit_16`(see code). 
 ```{r}
 #Select subset of pitchers that played in 2016
 war_pit_16 <- warPit %>% 
@@ -365,7 +365,7 @@ pit_2016 <- pit_2016 %>%
 ```
 
 
-Again, we nested "teams", "games played", and "WAR" within players and applied ```wghtWAR()``` to obtain a weighted average WAR for each player. 
+Again, we nested "teams", "games played", and "WAR" within players and applied `wghtWAR()` to obtain a weighted average WAR for each player. 
 ```{r}
 #Nest number of WAR-osbervations by players
 pit_2016 <- nest(pit_2016, -playerID, -bats, -throws)
@@ -782,7 +782,7 @@ sal_mostp_pl_all <-
 
 Let's also take a look at the most paid players in 2016 and their development. We filter the salaries table for data on 2016 and then get the playerIDs. We take all those players and arrange them descending to get the ones with the most salaries on top. Then we take the top 5 rows, using [1:5,]. For the development of the players, we take the Salaries table and look for the top5-earning players. 
   
-Greinza01 and Kershcl01, most earning in 2015 and 2016, had a shorter career comparing to the others. Also Greinza01 had the highest salary to start with. The other players have been playing in Major League Baseball for at least 10 years before getting paid more than 25 million US$.  
+Greinza01 and Kershcl01, most earning in 2015 and 2016, had a shorter career comparing to the others. Also Greinza01 had the highest salary to start with. The other players have been playing in Major League Baseball for at least 10 years before getting paid more than 25 million US\$.  
 
 ```{r sal16_most_players}
 #getting players for only 2016, players with more than one salary will be excluded
@@ -857,8 +857,6 @@ For the model, we also need to prep our data. We make two tables, one containing
   
 ###In 2016
 
-
-  
 ###High paid players - are they better? 
 
 To find out about the relationship of salary and being a good player we'll construct a linear model. We will compare the players' salaries to the Wins above replacement for position players and for pitching. To shorten the code, we make a function to calculate our linear model. 
