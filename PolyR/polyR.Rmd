@@ -156,6 +156,9 @@ makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
 
 ```{r results="hide"}
 makeBidderGeom = function(wealth=.05, frac = .5) {
+#input of function has default values. If wealth and/or frac are not given, these values are used. 
+#list contains: list with state (saving input wealth, and frac as a list)
+#and 3 functions 
   list( 
     state = function() { 
       list(
@@ -170,6 +173,7 @@ makeBidderGeom = function(wealth=.05, frac = .5) {
 }
 
 makeBidderConst = function(wealth=.05, const=.01) {
+#this function has again default values. It is the same as the one before, only the bid-function differs. 
   list( 
     state = function() { 
       list(
@@ -182,7 +186,12 @@ makeBidderConst = function(wealth=.05, const=.01) {
     bid = function()  { ifelse(wealth >= const, const, wealth) }  
   )
 }
+
 makeRawSource <- function(ncolumns) {
+#this function has one input variable, the number of columns.
+#It creates 4 variables and a list (containing the variable name and 4 functions, see comments there)
+
+#every column is stored as an active column (WHY DOES IT START WITH 0?)
   activeColumns  = 0:ncolumns
   position       = ncolumns
   prevPosition   = NA
@@ -190,49 +199,72 @@ makeRawSource <- function(ncolumns) {
   
   list(	
     name = "Marginal",
-    state = function() { 
+    #first function:
+    state = function() {
       list(
+      #the list stores the variables like before, except the nactive changes.
+      #the importance of this list and function creating it will be explained in "Why a list?"
         position     = position, 
         prevPosition = prevPosition,
         active       = activeColumns,
+        #the first active column is dropped, then the sum (checking for NAs before) is computed
         nactive      = sum(!is.na(activeColumns[-1]))
       )
     },
-    generateFeature = function() { 
+    #second function:
+    generateFeature = function() {
+    #here the positions are changed. With <<- we change the prevPosition and position variable in the parent environment
       prevPosition  <<- position
       position      <<- max(activeColumns[activeColumns < position], na.rm=T)
       return(prevPosition) 
     },
-    dropLastFeature = function() { activeColumns[prevPosition+1] <<- NA },
+    #third function:
+    dropLastFeature = function() { 
+    #this adds another column at the end, making it NA? (if generateFeature is done before)
+      activeColumns[prevPosition+1] <<- NA 
+      },
+    #fourth function:
     udPass = function() {
+    #new position is the last column (with highest (index) number)
       position <<- max(activeColumns, na.rm=T)
+      #prevPosition gets NA, to avoid errors if you forget to change it when doing a new round?
       prevPosition <<- NA
     }
   )
 }
 
 makeExpert <- function (bidder, constructor) {
+#this function takes two variables, a bidder and a constructor. They have to be given. 
+#it creates a list, containing the name ("Geom"), the bidder, constructor and 8 functions. 
   list(	
     name         = "Geom",
     bidder       = bidder,
     constructor  = constructor,
+    #Function 1:
     state        = function() { 
       list(
         wealth   = bidder$state()$wealth,
         position = constructor$state()$position
       )
     },
+    #Function 2:
     bid          = function() { bidder$bid() },
+    #Function 3:
     feature      = function() { constructor$generateFeature() },
+    #Function 4:
     finishedPass = function() { constructor$state()$position == 0 },
+    #Function 5:
     finished     = function() { constructor$state()$nactive == 0 },
+    #Function 6:
     passTest     = function(a) {
       bidder$bidAccepted(a)
       constructor$dropLastFeature() 
     },
+    #Function 7:
     pay          = function(payment) {
       bidder$bidRejected(payment)
     },
+    #Function 8:
     udPass       = function() { constructor$udPass() }
   )
 }
