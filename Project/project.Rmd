@@ -17,6 +17,7 @@ output:
 ```{r hide=T, warning=F, message=F}
 
 library(knitr)
+library(shiny)
 opts_chunk$set(echo = TRUE,
                collapse = TRUE,
                comment = "",
@@ -26,6 +27,7 @@ opts_chunk$set(echo = TRUE,
                out.width = "70%",
                fig.align = "center")
 source("help.R")
+theme_set(theme_light())
 ```  
 
 ##Introduction   
@@ -449,6 +451,7 @@ age_players_1 <- age_c_players %>%
     ggplot(aes(x = age)) +
     geom_line(stat = "density") + 
     geom_vline(aes(xintercept = mean(age)), alpha = 0.5, color = "#3068A1")
+
 div(ggplotly(age_players_1), align = "center")
 ```
 
@@ -509,6 +512,8 @@ age_c_team <-
    summarise(weightByG = mean(gProp), weightByGS = mean(gsProp)) %>%
    left_join(age_c_team, "teamID")
 #kable(sample_n(age_c_team,5), format="markdown")
+
+
 age_players_team_3 <- age_c_team %>% 
     ggplot(aes(reorder(teamID, meanAge), weightByG, color = teamID)) +
     geom_point(aes(reorder(teamID, meanAge), meanAge, color = teamID), size = 0.8) +
@@ -529,12 +534,24 @@ As we can can see, there are some differences if we weight the playing time, but
 age_c_team <- age_c_team %>% mutate(Wprop = W/G)
 age_perf_mod <- lm(data=age_c_team, formula= Wprop ~ weightByG)
 age_c_team <- age_c_team %>% add_predictions(age_perf_mod) %>% add_residuals(age_perf_mod)
+
 age_lm_1 <- age_c_team %>% 
   ggplot(aes(weightByG)) + geom_point(aes(y=Wprop)) + geom_line(aes(y=pred),color="#3068A1")
 div(ggplotly(age_lm_1), align = "center")
 age_lm_2 <- age_c_team %>% 
   ggplot(aes(resid)) + geom_freqpoly(binwidth=0.04)
 div(ggplotly(age_lm_2), align = "center")
+
+
+age_lm_1 <- age_c_team %>% 
+  ggplot(aes(weightByG)) + geom_point(aes(y=Wprop)) + geom_line(aes(y=pred),color="#3068A1")
+div(ggplotly(age_lm_1), align = "center")
+
+age_lm_2 <- age_c_team %>% 
+  ggplot(aes(resid)) + geom_freqpoly(binwidth=0.04)
+div(ggplotly(age_lm_2), align = "center")
+
+
 age_lm_3 <- age_c_team %>% 
   ggplot(aes(weightByG, resid)) + geom_point()
 div(ggplotly(age_lm_3), align = "center")
@@ -575,6 +592,8 @@ With the baseball salaries, some statistical values, like mean, max, min and med
 Salaries <- Salaries %>%
   mutate(salary = salary/1000000)
 (Salaries)
+
+
 sal_bb_stats <- Salaries %>%
   group_by(yearID) %>%
   summarise(n_players = n(), 
@@ -594,6 +613,7 @@ sal_bb_stats_90 <- sal_bb_stats %>%
   
 ##Overview
 The boxplot shows the median salary, and the first and third quantile. There are a lot of outliers, the mean salary is also shown. In 2000 there was a leap in the median salary, and in and after 2009, the highest salaries so far were payed. We're going to take a look at that afterwards. 
+<<<<<<< HEAD
 ```{r salaries_statistics, cache = T}
 summary(Salaries)
 #boxplot with the player salaries
@@ -610,6 +630,7 @@ sal_boxplot <- ggplot() +
 ###About missing data
 
 To find out about missing data, the number of players and teams was analyzed. Explicitly missing data is not stored in the tables we have, but there seems to be implicitly missing data. The number of players spikes a lot through the years, and there are also players, who got paid by more than one team a year, which can be seen in the difference between the number of players and the distinct number of players per year. As this analysis is about average salaries, we will keep all the data, because wheter somebody was paid twice or once does not matter. They played more, so they earned more. 
+<<<<<<< HEAD
 ```{r salaries_missing_data, cache = T}
 #graph with number of players per year
 sal_bb_nbplayers <- ggplot(data = sal_bb_stats) + 
@@ -620,6 +641,7 @@ sal_bb_nbplayers <- ggplot(data = sal_bb_stats) +
   labs(x = "Year", y = "Number of players", 
        title = "Number of players with salary information each year")
 div(ggplotly(sal_bb_nbplayers), align = "center")
+
 #graph with number of teams per year
 sal_bb_nbteams <- ggplot(data = sal_bb_stats, mapping = aes(x = yearID, y = n_teams)) + 
   geom_line(color = "#3068A1") + 
@@ -670,6 +692,7 @@ sal_bb_stats_lg_all <- sal_bb_stats_lg %>%
        title = "Median and mean salary per year and league")
 stat_type_names <- c(salary_lg_median = "Median Salary", salary_lg_mean = "Mean Salary")
 (sal_bb_stats_lg_all)+facet_wrap(vars(statistics_type), nrow=2, labeller = as_labeller(stat_type_names))
+
 #Range of bb salaries in leagues
 sal_bb_stats_lg_range <- 
   ggplot(data = sal_bb_stats_lg, mapping = aes(color = lgID)) +
@@ -701,6 +724,7 @@ sal_bb_us_av <-
   labs(x = "Year", y = "Average salary in million US$", 
        title = "Average salary of baseballers and US citizens")
 div(ggplotly(sal_bb_us_av), align = "center")
+
 sal_bb_us_dev <- ggplot(data = sal_bb_us) + 
   geom_point(mapping = aes(x = yearID, y = salary_mean_100perc), color = "#446A8B") + 
   geom_smooth(mapping = aes(x = yearID, y = salary_mean_100perc), color = "#748CA1", method='lm', se=F) + 
@@ -725,12 +749,14 @@ salary_max <- Salaries %>%
   subset(salary == max_salary) %>%
   ungroup()
 (salary_max)
+
 #checking how often somebody was mostpaid
 mostpaid_players <- salary_max %>%
   group_by(playerID) %>%
   summarise(mostpaid_player = n()) %>%
   ungroup()
 (mostpaid_players)
+
 #getting the salary development of the max paid players (2000-2016)
 sal_mostp_pl <- Salaries %>%
   filter(playerID %in% (salary_max$playerID))
@@ -750,6 +776,7 @@ sal_mostp_pl_all <-
   labs(x = "Year", y = "Salary per player in million US$", 
        title = "Salaries of the mostpaid baseball-players over time")
 (sal_mostp_pl_all)
+
 ```
   
 ###In 2016
@@ -813,51 +840,76 @@ lm_own <- function(df, y1, x1, txt_y, txt_x, txt_title, plot = T) {
 ```
 
 For the model, we also need to prep our data. We make two tables, one containing WARpos and the other WARpit. We use an inner join to keep the rows with data on both salary and war, and use an anti-join to see what data we've lost. 
+
+  
+###In 2016
+
+
+  
+###High paid players - are they better? 
+
+To find out about the relationship of salary and being a good player we'll construct a linear model. We will compare the players' salaries to the Wins above replacement for position players and for pitching. To shorten the code, we make a function to calculate our linear model. 
+
+For the model, we also need to prep our data. We make two tables, one containing WARpos and the other WARpit. We use an inner join to keep the rows with data on both salary and war, and use an anti-join to see what data we've lost. 
 ```{r salaries16_prep}
 #using an inner join to only hold the rows with WAR and salary
 salaries16_pl_warPos <- inner_join(salaries16, pos_2016, "playerID")
 (anti_join(salaries16, pos_2016, "playerID"))
 (anti_join(pos_2016, salaries16, "playerID"))
+
 #using an inner join to only hold the rows with WAR and salary
 salaries16_pl_warPit <- inner_join(salaries16, pit_2016, "playerID")
 #using anti_joins in both directions to see the data loss
 (anti_join(salaries16, pit_2016, "playerID") %>% print())
 (anti_join(pit_2016, salaries16, "playerID") %>% print())
+
 ```
   
 ####Salary and Wins above replacement
 Then we start the modeling. First we look at how WAR affects the salary. 
 ```{r lm_war_salary}
+
 lm_warpos_salary <- lm_own(salaries16_pl_warPos, "salary", "weightedWAR", 
                            "Salary in million US$", "Wins above replacement (pos. players)", 
                            "Linear model on the player's salary and \n
-                           Wins above Replacement for position players")
+                           Wins above Replacement for position players") 
+
 (lm_warpos_salary)
+
 lm_warpit_salary <- lm_own(salaries16_pl_warPit, "salary", "weightedWAR", 
                            "Salary in million US$", "Wins above replacement (pitching)", 
                            "Linear model on the player's salary and \n
                            Wins above Replacement for pitching")
+
 (lm_warpit_salary)
 ```
   
 ####Wins above replacement and salary  
 Then we look the other direction: What influence has the salary on WAR?
 ```{r lm_salary_war}
+
 lm_salary_warpos <- lm_own(salaries16_pl_warPos, "weightedWAR", "salary",
                            "Wins above replacement (pos. players)", "Salary in million US$", 
                            "Linear model on Wins above Replacement for position players \n
                            and the player's salary")
+
 (lm_salary_warpos)
+
 lm_salary_warpit <- lm_own(salaries16_pl_warPit, "weightedWAR", "salary",
                            "Wins above replacement (pitching)", "Salary in million US$", 
                            "Linear model on Wins above Replacement for pitching \n
                            and the player's salary")
+
 (lm_salary_warpit)
 ```
+
 ```{r comparing_salary_war}
+
 lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary)
-stargazer(lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary),
-          type = "HTML")
+stargazer(lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary))
+lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary)
+stargazer(lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary,
+          type = "HTML"))
 ```
 
 
@@ -876,12 +928,17 @@ mostpaying_teams <- Salaries %>%
   summarise(salary_sum = sum(salary)) %>%
   arrange(desc(salary_sum))
 mostpaying_teams <- mostpaying_teams[1:5,]
+
+
 #getting all data on those teams, calculating the sum and average salary
 mostpaying_teams_dev <- Salaries %>%
   filter(teamID %in% mostpaying_teams$teamID) %>%
   group_by(yearID, teamID) %>%
   summarise(salary_sum = sum(salary), 
             salary_mean = mean(salary))
+
+
+
 #plotting the sum of salaries
 sal_mostp_teams_sum <- 
   ggplot(data = mostpaying_teams_dev) + 
@@ -892,6 +949,7 @@ sal_mostp_teams_sum <-
   labs(x = "Year", y = "Money spent on players per team in million US$",
        title = "Money spent on players per team (5 most paying teams)")
 div(ggplotly(sal_mostp_teams_sum), align = "center")
+
 #plotting the average salary
 sal_mostp_teams_mean <- 
   ggplot(data = mostpaying_teams_dev) + 
@@ -916,6 +974,7 @@ salaries16_teams <- salaries16 %>%
             sal_median = median(salary),
             sal_mean = mean(salary),
             sal_sum = sum(salary))
+
 salaries16_teams_games <- inner_join(salaries16_teams,  
                                     (Teams %>% filter(yearID == age_year) %>% 
                                                select(teamID,G, W, L) %>% 
@@ -943,16 +1002,19 @@ salaries16_teams_med <- lm_own(salaries16_teams_games, "Wprop", "sal_median",
                                "% Games won", "Median player's salary in million US$ per team", "Linear model of the % Games won \n
                                and median salary per team")
 (salaries16_teams_med)
+
 #linear model for the maximum salary per team 
 salaries16_teams_max_prop <- lm_own(salaries16_teams_games, "Wprop", "sal_max_prop", 
                                     "% Games won", "Proportion of Maximum player's salary in million US$ per team", "Linear model of the % Games won \n
                                     and proportion of maximum salary per team")
 (salaries16_teams_max_prop)
+
 #linear model for the sum of salaries paid per team 
 salaries16_teams_sum <- lm_own(salaries16_teams_games, "Wprop", "sal_sum", 
                                "% Games won", "Money spent on players in million US$ per team", "Linear model of the % Games won \n
                                and Money spent on players per team")
 (salaries16_teams_sum)
+
 ```
   
 ####Win proportion and Salary
@@ -961,13 +1023,171 @@ salaries16_teams_sum <- lm_own(salaries16_teams_games, "Wprop", "sal_sum",
 #linear model for the median salary per team
 salaries16_wprop_med <- lm_own(salaries16_teams_games, "sal_median", "Wprop", "Median player's salary in million US$ per team", "% Games won", "Linear model of the median salary per team and % Games won")
 (salaries16_wprop_med)
+
 #linear model for the maximum salary per team 
 salaries16_wprop_max_prop <- lm_own(salaries16_teams_games, "sal_max_prop", "Wprop", "Proportion of Maximum player's salary in % per team", "% Games won", "Linear model of the proportion of maximum salary per team and % Games won")
 (salaries16_wprop_max_prop)
+
+
+#linear model for the maximum salary per team 
+salaries16_wprop_max_prop <- lm_own(salaries16_teams_games, "sal_max_prop", "Wprop", "Proportion of Maximum player's salary in % per team", "% Games won", "Linear model of the proportion of maximum salary per team and % Games won")
+(salaries16_wprop_max_prop)
+
+
 #linear model for the sum of salaries paid per team 
 salaries16_wprop_sum <- lm_own(salaries16_teams_games, "sal_sum", "Wprop", "Money spent on players in million US$ per team", "% Games won", "Linear model of the Money spent on players per team and % Games won")
 (salaries16_wprop_sum)
 ```
+
+
+#Of Handedness and Baseball
+The third chapter deals with the number of left-, right- and both handed baseball players, especially when batting and throwing. After data processing, the development of the handedness is analyzed and also compared to the average people's handedness.  
+
+##Data for Proportions of Batting and throwing hands since 1871  
+
+Our aim was to compute and plot the number of left, right and - if applicable - both-handed players that were in the league in any given year. The ```People``` table from Lahman's Baseball database contains information on each player's preferred batting and throwing hand, while the ```Appearances``` table contains information on which players were active each year, since 1871. Thus, if a player was active in, say 1871, he should appear in the ```Appearances``` table and given the information on his preferred batting and throwing hand from the ```People``` table, we should be able to derive the number of right, left, or both-handed players that were active in a given year. 
+
+Unfortunately, a simple join of the ```People```and ```Appearances``` tables via the intended key "playerID" is not possible, since a given player can be listed multiple times in the ```Appearances``` table. This is usually due to players switching teams midseason. If a player switched teams, he will appear as many times in the ```Appearances``` table as the number of teams he played for that year. It follows that if we joined ```Appearances```and ```People``` and computed the number/proportion of players in each handedness category and year, we would count some players more than once. 
+
+```{r}
+#Check number of observations per player and year
+Appearances %>% 
+  count(playerID, yearID) %>% 
+  filter(n > 1)
+```  
+We solved this issue by creating a new table ```didAppear``` which indicates whether a player appeared at least once in a given year (i.e., there's only one row per year and player).
+
+```{r}
+didAppear <- 
+  Appearances %>% 
+  group_by(yearID) %>% 
+  distinct(playerID) %>% 
+  ungroup()
+
+didAppear
+```
+
+Now, each player is counted only once per active year. 
+```{r}
+didAppear %>% 
+  count(playerID, yearID) %>% 
+  filter(n > 1)
+```  
+The ```People``` table already has a unique key in "playerID".
+
+```{r}
+People %>% 
+  count(playerID) %>% 
+  filter(n > 1)
+```
+
+
+We used ```left_join()``` to combine the ```didAppear``` and the ```People``` tables. The variable "playerID" served as a key. In the resulting table ```players``` each row corresponds to a unique year-by-player combination. A players preferred batting hand is encoded in the variable "bats", while his preferred throwing hand is encoded in the variable "throws". We changed these variables from type "character" to type "factor" and ordered their possible outcomes as follows: Right < Left < Both for "bats", and Right < Left, for "throws" (Note that bats had 3 possible outcomes, while throws only had 2). This ordering ensured that the legends in the final plots were ordered from most frequent to least frequent. 
+
+Unfortunately, the "throws" variable contained a single observation with the value "S" (instead of "R", or "L"). Since there was no mentioning of outcome "S" in the description of Lahman's baseball database, we concluded that this must be a typo or some other mistake. Therefore "S" was changed to "NA". 
+
+```{r}
+unique(People$throws) #possible outcomes for throws
+sum(People$throws == "S", na.rm = T) #Count number of observations with "S"
+People$throws[People$throws=="S"] <- NA
+``` 
+
+
+```{r}
+players <- left_join(didAppear,People,by="playerID") %>% 
+  mutate(
+    bats = factor(bats, 
+                  levels = c("R","L","B"),
+                  labels= c("Right","Left","Both"), #3 possible outcomes
+                  ordered=T),#To get the legend of the plot in the right order
+    throws = factor(throws,
+                    levels = c("R","L"),
+                    labels = c("Right", "Left"), #only 2 possible outcomes
+                    ordered = T)#To get the legend of the plot in the right order
+  ) %>% 
+  rename("year" = yearID)
+
+#check if each playerID-by-year combination is unique
+players %>% 
+  count(playerID, year) %>% 
+  filter(n > 1)
+```
+
+##Batting Hand
+The table ```plrBats```contains each year's total number of observations for all three handedness categories (left, right, both; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
+```{r}
+plrBats <- players %>% 
+  group_by(year,bats) %>% #Ensures that we get the data for each year
+  count() %>%
+  ungroup() %>% 
+  drop_na() %>% #Drop observations for which the batting hand was not available
+  group_by(year) %>% 
+  mutate(
+    "N" = sum(n), #Get total number of observations for each year (irrespective of handedness category) 
+    "proportion" = round(n/sum(n),3)
+  ) %>% 
+  rename("observed" = n)
+plrBats
+```
+
+###Plot  
+We figured that the number of observations a given year's proportional estimate is based upon may be an important piece of information. In order to include this information, we used ```ggplotly()``` as it allowed us to include N in ```plotly```'s own "hover text". 
+In more detail, we first created the ```ggplot```object ```batsPlot```  using ```geom_lines```to connect each year's proportions, with separate lines for each handedness category. Notice that we specified a third aesthetic "label = N" in addition to the x- and y-coordinates. This third aesthetic was necessary, as the ```tooltip```argument from ```ggplotly()``` can only display data that are specified as aesthetic arguments in the ```ggplot```object. 
+If you hover your cursor over any data point in the plot, a text element should pop up, displaying the year, the proportion and the total number of observations, N. To specify which aesthetics are displayed by ```ggplotly```, we provided the  ```tooltip``` argument with a string vector of the follwoing aesthetics: "year", "proportion", "N". 
+
+
+```{r}
+batPlot <- 
+  #aesthetic "label" is necessary for ggplotly's tooltip argument
+  ggplot(plrBats, aes(year, proportion, label = N))+ 
+  geom_line(aes(color=bats))+
+  scale_x_continuous(name="Year", breaks = seq(1871,2018,20))+
+  scale_y_continuous(breaks=seq(0,1,0.1))+
+  scale_color_manual(values=c("#446A8B", "#555822", "#985C59"))+
+  ylab("Proportion of Preferred Batting Hand")+
+  labs(color="Batting \n Hand")+
+  ggtitle("Proportional Distribution of Batting Hands")
+
+#Convert ggplot object into plotly object
+ggplotly(batPlot, tooltip = c("proportion", "year", "N")) 
+
+```
+
+##Throwing Hand  
+
+To obtain the proportions of left- and right-handed throwers for each year, we proceeded analogously to the more detailed account above. The table ```plrThrows``` contains the each year's total number of observations both handedness categories (left and right; "observed"), the total number of observations, irrespective of handedness category ("N"), as well as the proportion of each handedness category ("proportion"). 
+
+```{r}
+plrThrows <- players %>% 
+  group_by(year,throws) %>% 
+  count() %>%
+  ungroup() %>% 
+  drop_na() %>% 
+  group_by(year) %>% 
+  mutate(
+    "N" = sum(n),
+    "proportion" = round(n/sum(n),3)) 
+
+```
+
+###Plot  
+Again, ```ggplotly()``` was used to add the number of total observations a given years proportional estimate is based upon as a text element.   
+
+```{r}
+throwPlot <- 
+  ggplot(plrThrows, aes(year, proportion, label = N))+
+  geom_line(aes(color=throws))+
+  scale_x_continuous(name="Year", breaks = seq(1871,2018,20))+
+  scale_y_continuous(breaks=seq(0,1,0.1))+
+  scale_color_manual(values=c("#446A8B", "#555822", "#985C59"))+
+  ylab("Proportion of Preferred Throwing Hand")+
+  labs(color="Throwing \n Hand")+
+  ggtitle("Proportional Distribution of Throwing Hands")
+
+ggplotly(throwPlot,tooltip = c("proportion", "year", "N"))
+```  
+
+##Linear Model 
 
 
 #Of Age, Salaries and Handedness
@@ -996,6 +1216,20 @@ df16 %>%
   scale_x_log10()+
   facet_wrap(~bats)
   
+
+#preparing the data
+baseball16_bat <- inner_join(salaries16, age_c_players, by = c("playerID", "teamID")) %>%
+  print() 
+  #hier noch inner_join mit handedness (bat) hinzufügen
+
+anti_join(salaries16, age_c_players, by = c("playerID", "teamID")) #drop 48 rows (41 without teamID)
+anti_join(age_c_players, salaries16, by = c("playerID", "teamID")) #drop 677 rows (581 without teamID)
+
+baseball16_throw <- inner_join(salaries16, age_c_players, by = c("playerID", "teamID")) %>%
+  print() 
+  #hier noch inner_join mit handedness (throw) hinzufügen
+
+
 
 #preparing the data
 baseball16_bat <- inner_join(salaries16, age_c_players, by = c("playerID", "teamID")) %>%
