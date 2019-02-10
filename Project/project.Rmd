@@ -24,7 +24,6 @@ opts_chunk$set(echo = TRUE,
                strip.white = TRUE,
                warning = FALSE,
                messages = FALSE,
-               out.width = "70%",
                fig.align = "center")
 source("help.R")
 theme_set(theme_light())
@@ -83,7 +82,6 @@ People %>%
   count(playerID) %>% 
   filter(n > 1)
 ```
-
 
 We used `left_join()` to combine the `did_appear` and the `People` tables. The variable "playerID" served as primary and foreign key. In the resulting table, `players`, each row corresponds to a unique year-by-player combination. A player's preferred batting hand is encoded in the variable "bats", while his preferred throwing hand is encoded in the variable "throws". We changed these variables from type "character" to type "factor".
 
@@ -423,7 +421,6 @@ model_throws_pit <- lm(weightedWAR~throws, data = pit_2016)
 stargazer(model_throws_pit, align = T, type = "html")
 ``` 
 
-
 # Of Age and Baseball
 The first chapter analyzes the age of baseball players, focusing on the ones of 2016. First the average age is computed, then differences between the teams in their average players age are analyzed. At the end of this chapter, the questions "How old is a good baseball player?" or "Do they get better with age?" will be answered.   
 
@@ -450,7 +447,8 @@ Let's visualize that.
 age_players_1 <- age_c_players %>% 
     ggplot(aes(x = age)) +
     geom_line(stat = "density") + 
-    geom_vline(aes(xintercept = mean(age)), alpha = 0.5, color = "#3068A1")
+    geom_vline(aes(xintercept = mean(age)), alpha = 0.5, color = "#3068A1") +
+    labs(x = "Age", y = "Density")
 
 div(ggplotly(age_players_1), align = "center")
 ```
@@ -463,34 +461,33 @@ Now we know more about the average active player in `r age_year`. Let's go furth
 
 ```{r}
 names(color$team_main) <- sort(unique(age_c_players$teamID))
+
 age_c_team <- age_c_players %>% 
    group_by(teamID) %>%
    summarise(meanAge = mean(age), medianAge = median(age)) %>%
    left_join(Teams %>% filter(yearID == age_year) %>% select(teamID,name,W,L,G), by = "teamID")
  
-age_players_team_1 <- age_c_team %>% 
+age_c_team %>% 
     ggplot(aes(reorder(teamID,meanAge), meanAge, color = teamID)) +
     geom_point(size = 2) + 
     scale_color_manual(values = color$team_main) +
-    guides(color = FALSE) + 
+    guides(color = FALSE) + labs(x = "Team", y = "Average age") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
     coord_flip()
-div(ggplotly(age_players_team_1), align = "center")
 ```
 So now we know that the the team with the - on average - youngest players are the `r (age_c_team %>% filter(meanAge == min(meanAge)))$name` while the `r (age_c_team %>% filter(meanAge == max(meanAge)))$name` deploys - again, on average - the oldest players. But the difference between these 'extremes' is `r signif(max(age_c_team$meanAge) - min(age_c_team$meanAge),3)` and in my view not that siginificant. 
 
 We still want to know more, let's look at the related boxplot.
 
 ```{r}
-age_players_team_2 <- age_c_players %>% 
+age_c_players %>% 
     left_join(age_c_team, by = "teamID") %>%
     ggplot(aes(reorder(teamID,meanAge),age,color = teamID)) +
     geom_boxplot(notch = TRUE) +
     scale_color_manual(values = color$team_main) +
-    guides(color=FALSE) + 
+    guides(color = FALSE) + labs(x = "Team", y = "Average age") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
     coord_flip()
-div(ggplotly(age_players_team_2), align = "center")
 ```
 As we see, the IQR and Median isn't _that_ different between the teams. Maybe we can work out larger differences in the next question.
 
@@ -511,19 +508,17 @@ age_c_team <-
    mutate(gProp = age*(G_all/G_avg), gsProp = age*(GS/GS_avg)) %>%
    summarise(weightByG = mean(gProp), weightByGS = mean(gsProp)) %>%
    left_join(age_c_team, "teamID")
-#kable(sample_n(age_c_team,5), format="markdown")
 
-
-age_players_team_3 <- age_c_team %>% 
+age_c_team %>% 
     ggplot(aes(reorder(teamID, meanAge), weightByG, color = teamID)) +
     geom_point(aes(reorder(teamID, meanAge), meanAge, color = teamID), size = 0.8) +
     geom_point(size = 2) + 
     scale_color_manual(values = color$team_main) +
     geom_segment(aes(xend = teamID, yend = meanAge)) +
     guides(color = FALSE) + 
+    labs(y = "Age Weighted By Games Played", x = "Team") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + 
     coord_flip()
-div(ggplotly(age_players_team_3), align = "center")
 ```
 
 As we can can see, there are some differences if we weight the playing time, but most noticeable to me is that the shift is clearly toward more experienced players. To be exact, according to this new metric the average team is now `r signif(age_c_team %>% summarise(mean(weightByG-meanAge)),4)` years older which adds up to `r signif(age_c_team %>% summarise(sum(weightByG-meanAge)),4)` years in total for the whole league.
@@ -536,23 +531,22 @@ age_perf_mod <- lm(data=age_c_team, formula= Wprop ~ weightByG)
 age_c_team <- age_c_team %>% add_predictions(age_perf_mod) %>% add_residuals(age_perf_mod)
 
 age_lm_1 <- age_c_team %>% 
-  ggplot(aes(weightByG)) + geom_point(aes(y=Wprop)) + geom_line(aes(y=pred),color="#3068A1")
-div(ggplotly(age_lm_1), align = "center")
-age_lm_2 <- age_c_team %>% 
-  ggplot(aes(resid)) + geom_freqpoly(binwidth=0.04)
-div(ggplotly(age_lm_2), align = "center")
-
-
-age_lm_1 <- age_c_team %>% 
-  ggplot(aes(weightByG)) + geom_point(aes(y=Wprop)) + geom_line(aes(y=pred),color="#3068A1")
+  ggplot(aes(weightByG)) + 
+  geom_point(aes(y=Wprop)) +
+  geom_line(aes(y=pred),color="#3068A1") +
+  labs(x = "Age Weighted By Games Played", y = "Wins Proportional To Games Played")
 div(ggplotly(age_lm_1), align = "center")
 
 age_lm_2 <- age_c_team %>% 
-  ggplot(aes(resid)) + geom_freqpoly(binwidth=0.04)
+  ggplot(aes(resid)) +
+  geom_freqpoly(binwidth=0.04) +
+  labs(x = "Residuals", y = "Count")
 div(ggplotly(age_lm_2), align = "center")
 
 age_lm_3 <- age_c_team %>% 
-  ggplot(aes(weightByG, resid)) + geom_point()
+  ggplot(aes(weightByG, resid)) +
+  geom_point() +
+  labs(y = "Residuals", x = "Age Weighted By Games Played")
 div(ggplotly(age_lm_3), align = "center")
 ```
 
