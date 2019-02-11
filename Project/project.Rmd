@@ -589,7 +589,7 @@ age_war %>%
 ```
 
 ```{r results="asis"}
-stargazer(age_team_perf_mod, align=T, type='html')
+stargazer(age_war_mod, align=T, type='html')
 ```
 
 ## Age and Wins Above Replacement - Pitcher
@@ -627,7 +627,7 @@ age_war %>%
 ```
 
 ```{r results="asis"}
-stargazer(age_team_perf_mod, align=T, type='html')
+stargazer(age_war_mod, align=T, type='html')
 ```
 
 ## Age and Wins Above Replacement - Combined
@@ -661,7 +661,7 @@ age_war %>%
 ```
 
 ```{r results="asis"}
-stargazer(age_team_perf_mod, align=T, type='html')
+stargazer(age_war_mod, align=T, type='html')
 ```
 
 # Of Salaries and Baseball
