@@ -83,7 +83,7 @@ makeRawSource <- function(ncolumns) {
   prevPosition   = NA
   nactive        = ncolumns
   
-  list(	
+  list(
     name = "Marginal",
     state = function() { 
       list(
@@ -111,7 +111,7 @@ makeRawSource <- function(ncolumns) {
 
 ```{r eval=F}
 makeExpert <- function (bidder, constructor) {
-  list(	
+  list(
     name         = "Geom",
     bidder       = bidder,
     constructor  = constructor,
@@ -197,7 +197,7 @@ makeRawSource <- function(ncolumns) {
   prevPosition   = NA
   nactive        = ncolumns
   
-  list(	
+  list(
     name = "Marginal",
     #first function:
     state = function() {
@@ -236,7 +236,7 @@ makeRawSource <- function(ncolumns) {
 makeExpert <- function (bidder, constructor) {
 #this function takes two variables, a bidder and a constructor. They have to be given. 
 #it creates a list, containing the name ("Geom"), the bidder, constructor and 8 functions. 
-  list(	
+  list(
     name         = "Geom",
     bidder       = bidder,
     constructor  = constructor,
@@ -355,9 +355,77 @@ state()
 
 We find that bidderFunction with a list as a state doesn't update and therefore would be unusable in a program.
 
-# Multiple experts
+# Multiple experts {.tabset .tabset-fade .tabset-pills}
 
 > Generalize the code to use multiple experts (store the experts in a list).  While the code should be general, test it using two experts; one expert should use a geometric bidder and the other should use the constant bidder. Start each expert with wealth = omega/2.  The expert with the maximum bid “wins”, and gets to perform its test.  Note that each expert has private bidder and constructor objects (why?).  Only use one makeExpert function (you should pass it an argument for which bidder function to use).
+
+## Code
+
+```{r}
+makeExpert <- function (bidder, constructor) {
+  list(
+    bidder       = bidder,
+    constructor  = constructor,
+    state        = function() { 
+      list(
+        wealth   = bidder$state()$wealth,
+        position = constructor$state()$position
+      )
+    },
+    bid          = function() { bidder$bid() },
+    feature      = function() { constructor$generateFeature() },
+    finishedPass = function() { constructor$state()$position == 0 },
+    finished     = function() { constructor$state()$nactive == 0 },
+    passTest     = function(a) {
+      bidder$bidAccepted(a)
+      constructor$dropLastFeature() 
+    },
+    pay          = function(payment) {
+      bidder$bidRejected(payment)
+    },
+    udPass       = function() { constructor$udPass() }
+  )
+}
+
+makeMultiExpert <- function(ncolumns, wealth=.05, frac=.5, ...) {
+  makeExpert(
+    makeBidderGeom(wealth, frac),
+    makeRawSource(ncolumns)
+  )
+}
+```
+
+## Example
+
+```{r}
+seed = 421232
+set.seed(seed) 
+nNull = 20; nNonNull = 20
+nulls = runif(nNull)
+nonNulls = runif(nNonNull, 0, .05)
+pvals = sample(c(nulls, nonNulls)) 
+
+omega = .1
+expert = makeExpertGeom(length(pvals), wealth=omega, frac=.1)
+rejectedHyp = list()
+pass = 1
+
+while (!expert$finished() && expert$state()$wealth > 0) {
+  index = expert$feature()
+  bid = expert$bidder$bid()
+  expert$pay(bid)
+  if (pvals[index] < bid) {
+    expert$passTest(omega)
+    rejectedHyp[[1+length(rejectedHyp)]] = index
+  }
+  if(expert$finishedPass()) {
+    expert$udPass()
+    pass = pass+1
+  }
+}
+rejectedHyp; pass
+pvals[unlist(rejectedHyp)]
+```
 
 # Same Bidder
 
