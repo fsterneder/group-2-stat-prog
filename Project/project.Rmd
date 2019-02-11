@@ -427,7 +427,7 @@ The first chapter analyzes the age of baseball players, focusing on the ones of 
 ## Age of the average active baseball player in 2016
 
 ```{r}
-age_calc <- function(from,to=now()) floor(difftime(to, from)/dyears(1))
+age_calc <- function(from,to=now()) difftime(to, from)/dyears(1)
 age_year = 2016
 age_const = paste0(age_year,"0403")
 age_c_players <- 
@@ -439,16 +439,16 @@ age_c_players <-
 
 We define active as in played in season `r age_year`. Also we calculate the age with the start of the season (April 3rd).
 
-We find that the average active professional baseball player , in the season of `r age_year`, was born `r mean(age_c_players$birthDate)` and was therefore `r age_calc(mean(age_c_players$birthDate),ymd(age_const))` years old. 
+We find that the average active professional baseball player , in the season of `r age_year`, was born `r mean(age_c_players$birthDate)` and was therefore `r floor(age_calc(mean(age_c_players$birthDate),ymd(age_const)))` years old. 
 
 Let's visualize that.
 
 ```{r}
 age_plot <- age_c_players %>% 
     ggplot(aes(x = age)) +
-    geom_bar() + 
-    geom_vline(aes(xintercept = round(mean(age))), alpha = 0.5, color = "#3068A1") +
-    labs(x = "Age", y = "Count", title = "Age Distribution")
+    geom_line(stat="density") + 
+    geom_vline(aes(xintercept = mean(age)), alpha = 0.5, color = "#3068A1") +
+    labs(x = "Age", y = "Density", title = "Age Density")
 
 div(ggplotly(age_plot), align = "center")
 ```
@@ -520,7 +520,7 @@ age_c_team %>%
 
 As we can can see, there are some differences if we weight the playing time, but most noticeable to me is that the shift is clearly toward more experienced players. To be exact, according to this new metric the average team is now `r signif(age_c_team %>% summarise(mean(weightByG-meanAge)),4)` years older which adds up to `r signif(age_c_team %>% summarise(sum(weightByG-meanAge)),4)` years in total for the whole league.
 
-## Linear Model - performance and average team age
+## Games Won and Average Team Age
 
 ```{r}
 age_c_team <- age_c_team %>% mutate(Wprop = W/G)
@@ -544,12 +544,16 @@ age_c_team %>%
 stargazer(age_team_perf_mod, align=T, type='html')
 ```
 
-## Age and Wins Above Replacement - Position
-
-### Prep
+## Age and Wins Above Replacement
 
 ```{r}
-age_war <- left_join(age_c_players, pos_2016 %>%
+age_war_pos <- left_join(age_c_players, pos_2016 %>%
+  select(-bats,-throws,-data)) %>%
+  group_by(playerID,birthDate,age,weightedWAR) %>% 
+  summarise(G_all = sum(G_all), GS = sum(GS)) %>%
+  ungroup()
+
+age_war_pit <- left_join(age_c_players, pit_2016 %>%
   select(-bats,-throws,-data)) %>%
   group_by(playerID,birthDate,age,weightedWAR) %>% 
   summarise(G_all = sum(G_all), GS = sum(GS)) %>%
@@ -558,66 +562,49 @@ age_war <- left_join(age_c_players, pos_2016 %>%
 
 ### Missing values
 
-`r dim(age_war %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war)[1]`.
+Pos
+`r dim(age_war_pos %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war_pos)[1]`.
+
+Pit
+`r dim(age_war_pit %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war_pit)[1]`.
 
 ```{r}
-age_war <- age_war %>% drop_na(weightedWAR)
+age_war_pos <- age_war_pos %>% drop_na(weightedWAR)
 ```
 
 Implicitly missing values?
 
-### Model
+### Model Position
+
 
 ```{r}
-age_war_mod <- age_war %>% lm(formula = weightedWAR ~ age)
-age_war <- age_war %>% add_predictions(age_war_mod) %>% add_residuals(age_war_mod)
+age_war_pos_mod <- age_war_pos %>% lm(formula = weightedWAR ~ age)
+age_war_pos <- age_war_pos %>% add_predictions(age_war_pos_mod) %>% add_residuals(age_war_pos_mod)
 
-age_war %>% 
+age_war_pos %>% 
   ggplot(aes(age)) + 
   geom_point(aes(y=weightedWAR)) +
   geom_line(aes(y=pred),color="#3068A1")
 ```
 
 ```{r results="asis"}
-stargazer(age_war_mod, align=T, type='html')
+stargazer(age_war_pos_mod, align=T, type='html')
 ```
 
-## Age and Wins Above Replacement - Pitcher
-
-### Prep
+### Model Pitcher
 
 ```{r}
-age_war <- left_join(age_c_players, pit_2016 %>%
-  select(-bats,-throws,-data)) %>%
-  group_by(playerID,birthDate,age,weightedWAR) %>% 
-  summarise(G_all = sum(G_all), GS = sum(GS)) %>%
-  ungroup()
-```
+age_war_pit_mod <- age_war_pit %>% lm(formula = weightedWAR ~ age) 
+age_war_pit <- age_war_pit %>% add_predictions(age_war_pit_mod) %>% add_residuals(age_war_pit_mod)
 
-### Missing values
-
-`r dim(age_war %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war)[1]`.
-
-```{r}
-age_war <- age_war %>% drop_na(weightedWAR)
-```
-
-Implicitly missing values?
-
-### Model
-
-```{r}
-age_war_mod <- age_war %>% lm(formula = weightedWAR ~ age) 
-age_war <- age_war %>% add_predictions(age_war_mod) %>% add_residuals(age_war_mod)
-
-age_war %>% 
+age_war_pit %>% 
   ggplot(aes(age)) + 
   geom_point(aes(y=weightedWAR)) +
   geom_line(aes(y=pred),color="#3068A1")
 ```
 
 ```{r results="asis"}
-stargazer(age_war_mod, align=T, type='html')
+stargazer(age_war_pit_mod, align=T, type='html')
 ```
 
 ## Age and Wins Above Replacement - Combined
@@ -631,7 +618,7 @@ combo_2016 <-
   mutate(weightedWAR = weightedWAR.x + weightedWAR.y, data = data.x) %>%
   select(-data.x, -data.y, -weightedWAR.x, -weightedWAR.y)
 
-age_war <- left_join(age_c_players, combo_2016 %>%
+age_war_combo <- left_join(age_c_players, combo_2016 %>%
   select(-bats,-throws,-data)) %>%
   group_by(playerID,birthDate,age,weightedWAR) %>% 
   summarise(G_all = sum(G_all), GS = sum(GS)) %>%
@@ -641,17 +628,17 @@ age_war <- left_join(age_c_players, combo_2016 %>%
 ### Model
 
 ```{r}
-age_war_mod <- age_war %>% lm(formula = weightedWAR ~ age)
-age_war <- age_war %>% add_predictions(age_war_mod) %>% add_residuals(age_war_mod)
+age_war_combo_mod <- age_war_combo %>% lm(formula = weightedWAR ~ age)
+age_war_combo <- age_war_combo %>% add_predictions(age_war_combo_mod) %>% add_residuals(age_war_combo_mod)
 
-age_war %>% 
+age_war_combo %>% 
   ggplot(aes(age)) + 
   geom_point(aes(y=weightedWAR)) +
   geom_line(aes(y=pred),color="#3068A1")
 ```
 
 ```{r results="asis"}
-stargazer(age_war_mod, align=T, type='html')
+stargazer(age_war_combo_mod, align=T, type='html')
 ```
 
 # Of Salaries and Baseball
