@@ -424,7 +424,7 @@ stargazer(model_throws_pit, align = T, type = "html")
 # Of Age and Baseball
 The first chapter analyzes the age of baseball players, focusing on the ones of 2016. First the average age is computed, then differences between the teams in their average players age are analyzed. At the end of this chapter, the questions "How old is a good baseball player?" or "Do they get better with age?" will be answered.   
 
-##Age of the average active baseball player in 2016
+## Age of the average active baseball player in 2016
 
 ```{r}
 age_calc <- function(from,to=now()) floor(difftime(to, from)/dyears(1))
@@ -444,20 +444,20 @@ We find that the average active professional baseball player , in the season of 
 Let's visualize that.
 
 ```{r}
-age_players_1 <- age_c_players %>% 
+age_plot <- age_c_players %>% 
     ggplot(aes(x = age)) +
     geom_line(stat = "density") + 
     geom_vline(aes(xintercept = mean(age)), alpha = 0.5, color = "#3068A1") +
     labs(x = "Age", y = "Density")
 
-div(ggplotly(age_players_1), align = "center")
+div(ggplotly(age_plot), align = "center")
 ```
 
 Funfact: As we might be able to tell from the graph, the oldest player in the season of `r age_year` was `r age_calc(min(age_c_players$birthDate),ymd(age_const))`.
 
 Now we know more about the average active player in `r age_year`. Let's go further.
 
-##Differences in the age distribution per team
+## Differences in the age distribution per team
 
 ```{r}
 names(color$team_main) <- sort(unique(age_c_players$teamID))
@@ -491,7 +491,7 @@ age_c_players %>%
 ```
 As we see, the IQR and Median isn't _that_ different between the teams. Maybe we can work out larger differences in the next question.
 
-##Weighted average team age
+## Weighted average team age
 
 The idea is to weight the playing time of each player and therefore see if teams rather put their faith in younger players or value experience. The formula we use to weigh each time is $$ \text{age}_p \frac{\text{games played}_p}{\frac{1}{n}\sum^n_{i=1}\text{games played}_i} $$
 
@@ -523,39 +523,146 @@ age_c_team %>%
 
 As we can can see, there are some differences if we weight the playing time, but most noticeable to me is that the shift is clearly toward more experienced players. To be exact, according to this new metric the average team is now `r signif(age_c_team %>% summarise(mean(weightByG-meanAge)),4)` years older which adds up to `r signif(age_c_team %>% summarise(sum(weightByG-meanAge)),4)` years in total for the whole league.
 
-##Linear Model - performance and average team age
+## Linear Model - performance and average team age
 
 ```{r}
 age_c_team <- age_c_team %>% mutate(Wprop = W/G)
-age_perf_mod <- lm(data=age_c_team, formula= Wprop ~ weightByG)
-age_c_team <- age_c_team %>% add_predictions(age_perf_mod) %>% add_residuals(age_perf_mod)
+age_team_perf_mod <- lm(data=age_c_team, formula= Wprop ~ weightByG)
+age_c_team <- age_c_team %>% add_predictions(age_team_perf_mod) %>% add_residuals(age_team_perf_mod)
 
-age_lm_1 <- age_c_team %>% 
+age_plot <- age_c_team %>% 
   ggplot(aes(weightByG)) + 
   geom_point(aes(y=Wprop)) +
   geom_line(aes(y=pred),color="#3068A1") +
-  labs(x = "Age Weighted By Games Played", y = "Wins Proportional To Games Played")
-div(ggplotly(age_lm_1), align = "center")
+  labs(x = "Age Weighted By Games Played", y = "% Games won")
+div(ggplotly(age_plot), align = "center")
 
-age_lm_2 <- age_c_team %>% 
+age_plot <- age_c_team %>% 
   ggplot(aes(resid)) +
   geom_freqpoly(binwidth=0.04) +
   labs(x = "Residuals", y = "Count")
-div(ggplotly(age_lm_2), align = "center")
+div(ggplotly(age_plot), align = "center")
 
-age_lm_3 <- age_c_team %>% 
+age_plot <- age_c_team %>% 
   ggplot(aes(weightByG, resid)) +
   geom_point() +
   labs(y = "Residuals", x = "Age Weighted By Games Played")
-div(ggplotly(age_lm_3), align = "center")
+div(ggplotly(age_plot), align = "center")
 ```
 
 ```{r results="asis"}
-stargazer(age_perf_mod, align=T, type='html')
+stargazer(age_team_perf_mod, align=T, type='html')
 ```
-#Text needed on lm age :) 
-#Text/Analysis needed on Performance of individuals as they age 
-##Performance of individuals as they age
+
+## Age and Wins Above Replacement - Position
+
+### Prep
+
+```{r}
+age_war <- left_join(age_c_players, pos_2016 %>%
+  select(-bats,-throws,-data)) %>%
+  group_by(playerID,birthDate,age,weightedWAR) %>% 
+  summarise(G_all = sum(G_all), GS = sum(GS)) %>%
+  ungroup()
+```
+
+### Missing values
+
+`r dim(age_war %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war)[1]`.
+
+```{r}
+age_war <- age_war %>% drop_na(weightedWAR)
+```
+
+Implicitly missing values?
+
+### Model
+
+```{r}
+age_war_mod <- age_war %>% lm(formula = weightedWAR ~ age)
+age_war <- age_war %>% add_predictions(age_war_mod) %>% add_residuals(age_war_mod)
+
+age_war %>% 
+  ggplot(aes(age)) + 
+  geom_point(aes(y=weightedWAR)) +
+  geom_line(aes(y=pred),color="#3068A1")
+```
+
+```{r results="asis"}
+stargazer(age_team_perf_mod, align=T, type='html')
+```
+
+## Age and Wins Above Replacement - Pitcher
+
+### Prep
+
+```{r}
+age_war <- left_join(age_c_players, pit_2016 %>%
+  select(-bats,-throws,-data)) %>%
+  group_by(playerID,birthDate,age,weightedWAR) %>% 
+  summarise(G_all = sum(G_all), GS = sum(GS)) %>%
+  ungroup()
+```
+
+### Missing values
+
+`r dim(age_war %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war)[1]`.
+
+```{r}
+age_war <- age_war %>% drop_na(weightedWAR)
+```
+
+Implicitly missing values?
+
+### Model
+
+```{r}
+age_war_mod <- age_war %>% lm(formula = weightedWAR ~ age) 
+age_war <- age_war %>% add_predictions(age_war_mod) %>% add_residuals(age_war_mod)
+
+age_war %>% 
+  ggplot(aes(age)) + 
+  geom_point(aes(y=weightedWAR)) +
+  geom_line(aes(y=pred),color="#3068A1")
+```
+
+```{r results="asis"}
+stargazer(age_team_perf_mod, align=T, type='html')
+```
+
+## Age and Wins Above Replacement - Combined
+
+### Prep
+
+```{r}
+combo_2016 <- 
+  left_join(pit_2016, pos_2016, c("playerID","bats","throws")) %>%
+  mutate(weightedWAR.y = if_else(is.na(weightedWAR.y),0,weightedWAR.y)) %>%
+  mutate(weightedWAR = weightedWAR.x + weightedWAR.y, data = data.x) %>%
+  select(-data.x, -data.y, -weightedWAR.x, -weightedWAR.y)
+
+age_war <- left_join(age_c_players, combo_2016 %>%
+  select(-bats,-throws,-data)) %>%
+  group_by(playerID,birthDate,age,weightedWAR) %>% 
+  summarise(G_all = sum(G_all), GS = sum(GS)) %>%
+  ungroup()
+```
+
+### Model
+
+```{r}
+age_war_mod <- age_war %>% lm(formula = weightedWAR ~ age)
+age_war <- age_war %>% add_predictions(age_war_mod) %>% add_residuals(age_war_mod)
+
+age_war %>% 
+  ggplot(aes(age)) + 
+  geom_point(aes(y=weightedWAR)) +
+  geom_line(aes(y=pred),color="#3068A1")
+```
+
+```{r results="asis"}
+stargazer(age_team_perf_mod, align=T, type='html')
+```
 
 # Of Salaries and Baseball
 After looking at the average age of baseball players, we take a look on what they earn. Is it more/less depending on the league? How is the development compared to the average US-salary? After answering these questions, the mostpaid players in the 2000s and mostpaying teams in 2016 are also listed. The main questions, if a good baseball player also gets paid high, and if a team that spends much on their players, wins more, are asked at the end. 
