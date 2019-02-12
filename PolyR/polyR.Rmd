@@ -34,7 +34,7 @@ opts_chunk$set(echo = TRUE,
 
 ## makeBidderGeom
 
-This function constructs a list containing three functions and nested inside, a list which stores the current state. We have a bidAccepted function which increments the wealth value in the state, the bidRejected which decreases the wealth value and the bid function which implements the geometric behavior of the bid.
+This function constructs a list containing four functions. One of the functions (state) stores a list with the current state. We have a bidAccepted function which increments the wealth value in the state, the bidRejected which decreases the wealth value and the bid function which implements the geometric behavior of the bid.
 
 ```{r eval=F}
 makeBidderGeom = function(wealth=.05, frac = .5) {
@@ -270,8 +270,14 @@ makeExpert <- function (bidder, constructor) {
 }
 
 makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
+#this function takes the number of columns, and optional the wealth and frac. 
+#it calls the makeExpert function above, with 
   makeExpert(
+  #bidder being the bidder made by the makeBidderGeom function. 
+  #The input values for wealth and frac are passed
     makeBidderGeom(wealth, frac),
+  #constructor is made by the makeRawSource function. 
+  #The input value of ncolumns is passed on. 
     makeRawSource(ncolumns)
   )
 }
