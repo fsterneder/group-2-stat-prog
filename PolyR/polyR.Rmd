@@ -34,7 +34,7 @@ opts_chunk$set(echo = TRUE,
 
 ## makeBidderGeom
 
-This function constructs a list containing three functions and nested inside, a list which stores the current state. We have a bidAccepted function which increments the wealth value in the state, the bidRejected which decreases the wealth value and the bid function which implements the geometric behavior of the bid.
+This function constructs a list containing four functions. One of the functions (state) stores a list with the current state. We have a bidAccepted function which increments the wealth value in the state, the bidRejected which decreases the wealth value and the bid function which implements the geometric behavior of the bid.
 
 ```{r eval=F}
 makeBidderGeom = function(wealth=.05, frac = .5) {
@@ -270,8 +270,14 @@ makeExpert <- function (bidder, constructor) {
 }
 
 makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
+#this function takes the number of columns, and optional the wealth and frac. 
+#it calls the makeExpert function above, with 
   makeExpert(
+  #bidder being the bidder made by the makeBidderGeom function. 
+  #The input values for wealth and frac are passed
     makeBidderGeom(wealth, frac),
+  #constructor is made by the makeRawSource function. 
+  #The input value of ncolumns is passed on. 
     makeRawSource(ncolumns)
   )
 }
@@ -362,42 +368,27 @@ We find that bidderFunction with a list as a state doesn't update and therefore 
 ## Code
 
 ```{r}
-makeExpert <- function (bidder, constructor) {
-  list(
-    bidder       = bidder,
-    constructor  = constructor,
-    state        = function() { 
-      list(
-        wealth   = bidder$state()$wealth,
-        position = constructor$state()$position
-      )
-    },
-    bid          = function() { bidder$bid() },
-    feature      = function() { constructor$generateFeature() },
-    finishedPass = function() { constructor$state()$position == 0 },
-    finished     = function() { constructor$state()$nactive == 0 },
-    passTest     = function(a) {
-      bidder$bidAccepted(a)
-      constructor$dropLastFeature() 
-    },
-    pay          = function(payment) {
-      bidder$bidRejected(payment)
-    },
-    udPass       = function() { constructor$udPass() }
-  )
-}
-
-makeMultiExpert <- function(ncolumns, wealth=.05, frac=.5, ...) {
-  makeExpert(
-    makeBidderGeom(wealth, frac),
-    makeRawSource(ncolumns)
-  )
+makeMultiExpert <- function(..., ncolumns, wealth=.05) {
+  output <- list()
+  for (i in seq_along(list(...))) {
+    output[[i]] <- makeExpert(
+      list(...)[[i]](wealth),
+      makeRawSource(ncolumns)
+    )
+  }
+  output
 }
 ```
+
+To keep the code as simple and as general as possible we opted to use partial function application in regard to the bidder options problem. The other option would be to check which function was supplied and then apply the right option but this would require hardcoding every single bidder and bidder option and wouldn't be general in our opinion.
+
+There are many functional packages that provide partial function application but we went with purrr since we used the tidyverse in our class.
 
 ## Example
 
 ```{r}
+library(purrr)
+
 seed = 421232
 set.seed(seed) 
 nNull = 20; nNonNull = 20
@@ -406,25 +397,27 @@ nonNulls = runif(nNonNull, 0, .05)
 pvals = sample(c(nulls, nonNulls)) 
 
 omega = .1
-expert = makeExpertGeom(length(pvals), wealth=omega, frac=.1)
+expertConst = partial(makeBidderConst, const=.1)
+expertGeom  = partial(makeBidderGeom, frac=.1)
+expert = makeMultiExpert(expertConst, expertGeom, ncolumns=length(pvals), wealth=omega/2)
 rejectedHyp = list()
 pass = 1
 
-while (!expert$finished() && expert$state()$wealth > 0) {
-  index = expert$feature()
-  bid = expert$bidder$bid()
-  expert$pay(bid)
-  if (pvals[index] < bid) {
-    expert$passTest(omega)
-    rejectedHyp[[1+length(rejectedHyp)]] = index
-  }
-  if(expert$finishedPass()) {
-    expert$udPass()
-    pass = pass+1
-  }
-}
-rejectedHyp; pass
-pvals[unlist(rejectedHyp)]
+#while (!expert$finished() && expert$state()$wealth > 0) {
+#  index = expert$feature()
+#  bid = expert$bidder$bid()
+#  expert$pay(bid)
+#  if (pvals[index] < bid) {
+#    expert$passTest(omega)
+#    rejectedHyp[[1+length(rejectedHyp)]] = index
+#  }
+#  if(expert$finishedPass()) {
+#    expert$udPass()
+#    pass = pass+1
+#  }
+#}
+#rejectedHyp; pass
+#pvals[unlist(rejectedHyp)]
 ```
 
 # Same Bidder

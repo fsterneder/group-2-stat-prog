@@ -145,6 +145,7 @@ bat_plot <-
   ylab("Proportion of Preferred Batting Hand")+
   labs(color="Batting \n Hand")+
   ggtitle("proportional distribution of batting hands")
+
 #Convert ggplot object into plotly object
 div(ggplotly(bat_plot, tooltip = c("proportion", "yearID", "N")),align="center") 
 ``` 
@@ -430,6 +431,7 @@ age_plot <- age_c_players %>%
     geom_line(stat="density") + 
     geom_vline(aes(xintercept = mean(age)), alpha = 0.5, color = "#3068A1") +
     labs(x = "Age", y = "Density", title = "Age Density")
+
 div(ggplotly(age_plot), align = "center")
 ```
 
@@ -504,11 +506,13 @@ As we can can see, there are some differences if we weight the playing time, but
 age_c_team <- age_c_team %>% mutate(Wprop = W/G)
 age_team_perf_mod <- lm(data=age_c_team, formula= Wprop ~ weightByG)
 age_c_team <- age_c_team %>% add_predictions(age_team_perf_mod) %>% add_residuals(age_team_perf_mod)
+
 age_c_team %>% 
   ggplot(aes(weightByG)) + 
   geom_point(aes(y=Wprop)) +
   geom_line(aes(y=pred),color="#3068A1") +
   labs(x = "Age Weighted By Games Played", y = "% Games won", title = "Linear Model Visualization")
+
 age_c_team %>% 
   ggplot(aes(weightByG, resid)) +
   geom_point() +
@@ -528,6 +532,7 @@ age_war_pos <- left_join(age_c_players, pos_2016 %>%
   group_by(playerID,birthDate,age,weightedWAR) %>% 
   summarise(G_all = sum(G_all), GS = sum(GS)) %>%
   ungroup()
+
 age_war_pit <- left_join(age_c_players, pit_2016 %>%
   select(-bats,-throws,-data)) %>%
   group_by(playerID,birthDate,age,weightedWAR) %>% 
@@ -552,9 +557,18 @@ Implicitly missing values?
 ### Model Position
 
 
+
 ```{r}
 age_war_pos_mod <- age_war_pos %>% lm(formula = weightedWAR ~ age)
 age_war_pos <- age_war_pos %>% add_predictions(age_war_pos_mod) %>% add_residuals(age_war_pos_mod)
+```
+
+
+```{r}
+age_war_pos_mod <- age_war_pos %>% lm(formula = weightedWAR ~ age)
+age_war_pos <- age_war_pos %>% add_predictions(age_war_pos_mod) %>% add_residuals(age_war_pos_mod)
+
+
 age_war_pos %>% 
   ggplot(aes(age)) + 
   geom_point(aes(y=weightedWAR)) +
@@ -570,6 +584,7 @@ stargazer(age_war_pos_mod, align=T, type='html')
 ```{r}
 age_war_pit_mod <- age_war_pit %>% lm(formula = weightedWAR ~ age) 
 age_war_pit <- age_war_pit %>% add_predictions(age_war_pit_mod) %>% add_residuals(age_war_pit_mod)
+
 age_war_pit %>% 
   ggplot(aes(age)) + 
   geom_point(aes(y=weightedWAR)) +
@@ -590,6 +605,7 @@ combo_2016 <-
   mutate(weightedWAR.y = if_else(is.na(weightedWAR.y),0,weightedWAR.y)) %>%
   mutate(weightedWAR = weightedWAR.x + weightedWAR.y, data = data.x) %>%
   select(-data.x, -data.y, -weightedWAR.x, -weightedWAR.y)
+
 age_war_combo <- left_join(age_c_players, combo_2016 %>%
   select(-bats,-throws,-data)) %>%
   group_by(playerID,birthDate,age,weightedWAR) %>% 
@@ -602,6 +618,7 @@ age_war_combo <- left_join(age_c_players, combo_2016 %>%
 ```{r}
 age_war_combo_mod <- age_war_combo %>% lm(formula = weightedWAR ~ age)
 age_war_combo <- age_war_combo %>% add_predictions(age_war_combo_mod) %>% add_residuals(age_war_combo_mod)
+
 age_war_combo %>% 
   ggplot(aes(age)) + 
   geom_point(aes(y=weightedWAR)) +
@@ -1155,6 +1172,6 @@ threeD <- function(df){
   models
 }
 
-div(threeD(df16)$`Right-Handed Throwers`$plot, align = "center")
+div(threeD(df16)$'Right-Handed Throwers'$plot, align = "center")
 
 ```
