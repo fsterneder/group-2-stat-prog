@@ -46,3 +46,8 @@ wghtWAR <- function(df){
   }
   sum(war)
 }
+
+#Predict Surface
+predictSurface <- function(x1, x2, model) {
+  predict(model, data.frame(age=x1, salary=x2))
+}
