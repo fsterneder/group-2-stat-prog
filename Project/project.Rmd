@@ -404,24 +404,24 @@ stargazer(model_throws_pit, align = T, type = "html")
 ``` 
 
 # Of Age and Baseball
-The first chapter analyzes the age of baseball players, focusing on the ones of 2016. First the average age is computed, then differences between the teams in their average players age are analyzed. At the end of this chapter, the questions "How old is a good baseball player?" or "Do they get better with age?" will be answered.   
+This chapter analyzes the age of baseball players, focusing on the season of 2016. First the average age is computed, then differences between the teams and their average players age are analyzed. At the end of this chapter, we will build a model which tries to answer the questions "How old is a good baseball player?" or "Do they get better with age?".
 
 ## Age of the average active baseball player in 2016
 
 ```{r}
 age_calc <- function(from,to=now()) difftime(to, from)/dyears(1)
-age_year = 2016
-age_const = paste0(age_year,"0403")
+age_current <- 2016
+age_const <- function(year=2016) paste0(year,"0403")
 age_c_players <- 
-    left_join(Appearances %>% filter(yearID == age_year), People, "playerID") %>%
-    mutate(birthDate = as_date(ymd(paste(birthYear, birthMonth, birthDay, sep = "-")))) %>%
-    mutate(age = age_calc(birthDate, ymd(age_const))) %>%
-    select(playerID, teamID, birthDate, age, nameFirst, nameLast, G_all, GS) 
+  left_join(Appearances %>% filter(yearID == age_current), People, "playerID") %>%
+  mutate(birthDate = as_date(ymd(paste(birthYear, birthMonth, birthDay, sep = "-")))) %>%
+  mutate(age = age_calc(birthDate, ymd(age_const(age_current)))) %>%
+  select(playerID, teamID, birthDate, age, nameFirst, nameLast, G_all, GS) 
 ```
 
-We define active as in played in season `r age_year`. Also we calculate the age with the start of the season (April 3rd).
+We define active as in "played in season `r age_current`". Also we calculate the age with the start of the season (April 3rd).
 
-We find that the average active professional baseball player , in the season of `r age_year`, was born `r mean(age_c_players$birthDate)` and was therefore `r floor(age_calc(mean(age_c_players$birthDate),ymd(age_const)))` years old. 
+We find that the average active professional baseball player , in the season of `r age_current`, was born `r mean(age_c_players$birthDate)` and was therefore `r floor(age_calc(mean(age_c_players$birthDate),ymd(age_const(age_current))))` years old. 
 
 Let's visualize that.
 
@@ -435,9 +435,9 @@ age_plot <- age_c_players %>%
 div(ggplotly(age_plot), align = "center")
 ```
 
-Funfact: As we might be able to tell from the graph, the oldest player in the season of `r age_year` was `r age_calc(min(age_c_players$birthDate),ymd(age_const))`.
+Funfact: As we might be able to tell from the graph, the oldest player in the season of `r age_current` was `r age_calc(min(age_c_players$birthDate),ymd(age_const(age_current)))`.
 
-Now we know more about the average active player in `r age_year`. Let's go further.
+Now we know more about the average active player in `r age_current`. Let's go further.
 
 ## Differences in the age distribution per team
 
@@ -446,7 +446,7 @@ names(color$team_main) <- sort(unique(age_c_players$teamID))
 age_c_team <- age_c_players %>% 
    group_by(teamID) %>%
    summarise(meanAge = mean(age), medianAge = median(age)) %>%
-   left_join(Teams %>% filter(yearID == age_year) %>% select(teamID,name,W,L,G), by = "teamID")
+   left_join(Teams %>% filter(yearID == age_current) %>% select(teamID,name,W,L,G), by = "teamID")
  
 age_c_team %>% 
     ggplot(aes(reorder(teamID,meanAge), meanAge, color = teamID)) +
@@ -455,7 +455,7 @@ age_c_team %>%
     guides(color = FALSE) + labs(x = "Team", y = "Average Age", title = "Average Age by Team") +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 ```
-So now we know that the the team with the - on average - youngest players are the `r (age_c_team %>% filter(meanAge == min(meanAge)))$name` while the `r (age_c_team %>% filter(meanAge == max(meanAge)))$name` deploys - again, on average - the oldest players. But the difference between these 'extremes' is `r signif(max(age_c_team$meanAge) - min(age_c_team$meanAge),3)` and in my view not that siginificant. 
+So now we know that the the team with the - on average - youngest players are the `r (age_c_team %>% filter(meanAge == min(meanAge)))$name` while the `r (age_c_team %>% filter(meanAge == max(meanAge)))$name` deploys - again, on average - the oldest players. The difference between these 'extremes' is `r signif(max(age_c_team$meanAge) - min(age_c_team$meanAge),3)` and is less than one might would have expected. Having a roster of 40 players per team possibly has an effect here.
 
 We still want to know more, let's look at the related boxplot.
 
@@ -478,7 +478,7 @@ The idea is to weight the playing time of each player and therefore see if teams
 age_c_team <- 
    left_join(
              age_c_players,
-             (Teams %>% filter(yearID == age_year) %>% select(teamID,G, W, L)),
+             (Teams %>% filter(yearID == age_current) %>% select(teamID,G, W, L)),
              "teamID"
             ) %>%
    group_by(teamID) %>% 
@@ -498,9 +498,15 @@ age_c_team %>%
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) 
 ```
 
-As we can can see, there are some differences if we weight the playing time, but most noticeable to me is that the shift is clearly toward more experienced players. To be exact, according to this new metric the average team is now `r signif(age_c_team %>% summarise(mean(weightByG-meanAge)),4)` years older which adds up to `r signif(age_c_team %>% summarise(sum(weightByG-meanAge)),4)` years in total for the whole league.
+As we can can see, there are some differences if we weight the playing time, but most noticeable is that the shift is clearly toward more experienced players. To be exact, according to this new metric the average team is now `r signif(age_c_team %>% summarise(mean(weightByG-meanAge)),4)` years older which adds up to `r signif(age_c_team %>% summarise(sum(weightByG-meanAge)),4)` years in total for the whole league.
 
-## Games Won and Average Team Age
+## Games Won and Average Team Age 
+
+### Season 2016
+
+With the information we got so far we build a linear model to see if there is a connection between the percentage of games won by a team and their weighted average age. The model looks like this:
+
+$$ \hat{\text{Wprop}}_i = \hat{\beta_0} + \hat{\beta_1} \text{Age}_i $$
 
 ```{r}
 age_c_team <- age_c_team %>% mutate(Wprop = W/G)
@@ -521,23 +527,53 @@ age_c_team %>%
 ```
 
 ```{r results="asis"}
-stargazer(age_team_perf_mod, align=T, type='html')
+stargazer(age_team_perf_mod, align=T, type='html', style="all2")
+```
+
+If we believe in this model than we could argue, since there is a positive slope, that it would be advantageous for a team to field (exclusivly?) older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
+
+### Season 1985 - 2016
+```{r}
+age_from = 1985
+age_f_players <- 
+  left_join(Appearances %>% filter(yearID %in% seq(from = age_from, to = age_current)), People, "playerID") %>%
+  mutate(birthDate = as_date(ymd(paste(birthYear, birthMonth, birthDay, sep = "-")))) %>%
+  mutate(age = age_calc(birthDate, ymd(age_const(yearID)))) %>%
+  select(yearID, playerID, teamID, birthDate, age, nameFirst, nameLast, G_all, GS) 
+
+age_f_team <- age_f_players %>% 
+   group_by(yearID, teamID) %>%
+   summarise(meanAge = mean(age), medianAge = median(age)) %>%
+   left_join(Teams %>% filter(yearID %in% seq(from= age_from, to = age_current)) %>% select(yearID, teamID,name,W,L,G), by = c("teamID","yearID"))
+
+age_f_team <- 
+   left_join(
+             age_f_players,
+             (Teams %>% filter(yearID %in% seq(from = age_from, to = age_current)) %>% select(teamID,G, W, L)),
+             "teamID"
+            ) %>%
+   group_by(yearID, teamID) %>% 
+   add_count() %>%
+   mutate(G_avg = mean(G_all),GS_avg = mean(GS)) %>%
+   mutate(gProp = age*(G_all/G_avg), gsProp = age*(GS/GS_avg)) %>%
+   summarise(weightByG = mean(gProp), weightByGS = mean(gsProp)) %>%
+   left_join(age_f_team, c("teamID","yearID"))
 ```
 
 ## Age and Wins Above Replacement
 
 ```{r}
 age_war_pos <- left_join(age_c_players, pos_2016 %>%
-  select(-bats,-throws,-data)) %>%
-  group_by(playerID,birthDate,age,weightedWAR) %>% 
-  summarise(G_all = sum(G_all), GS = sum(GS)) %>%
-  ungroup()
+ select(-bats,-throws,-data)) %>%
+ group_by(playerID,birthDate,age,weightedWAR) %>% 
+ summarise(G_all = sum(G_all), GS = sum(GS)) %>%
+ ungroup()
 
 age_war_pit <- left_join(age_c_players, pit_2016 %>%
-  select(-bats,-throws,-data)) %>%
-  group_by(playerID,birthDate,age,weightedWAR) %>% 
-  summarise(G_all = sum(G_all), GS = sum(GS)) %>%
-  ungroup()
+ select(-bats,-throws,-data)) %>%
+ group_by(playerID,birthDate,age,weightedWAR) %>% 
+ summarise(G_all = sum(G_all), GS = sum(GS)) %>%
+ ungroup()
 ```
 
 ### Missing values
@@ -1022,17 +1058,17 @@ salaries16_teams <- salaries16 %>%
             sal_mean = mean(salary),
             sal_sum = sum(salary))
 salaries16_teams_games <- inner_join(salaries16_teams,  
-                                    (Teams %>% filter(yearID == age_year) %>% 
+                                    (Teams %>% filter(yearID == age_current) %>% 
                                                select(teamID,G, W, L) %>% 
                                                mutate(Wprop = W/G)),
                                      "teamID")
 salaries16_teams_games
-(anti_join((Teams %>% filter(yearID == age_year) %>% 
+(anti_join((Teams %>% filter(yearID == age_current) %>% 
                       select(teamID,G, W, L)) %>% 
                       mutate(Wprop = W/G), salaries16_teams, "teamID"))
             
 (anti_join(salaries16_teams, 
-           (Teams %>% filter(yearID == age_year) %>% 
+           (Teams %>% filter(yearID == age_current) %>% 
                       select(teamID,G, W, L) %>% 
                       mutate(Wprop = W/G)), 
            "teamID"))
