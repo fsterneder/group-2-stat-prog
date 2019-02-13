@@ -830,177 +830,6 @@ sal_bb_us_dev <- ggplot(data = sal_bb_us) +
        title = "Salarydevelopment of baseballers and US citizens")
 div(ggplotly(sal_bb_us_dev), align = "center")
 ```
-  
-##Mostpaid players
-
-The rise in the salaries was mainly conducted by some high earninig players - why do they get paid so much more than others? Are they better? To answer these questions the players with the largest salaries each year (after 2000, where the gap was getting a lot bigger) were chosen for further analysis. 
-```{r salaries_mostp_pl_teams}
-#calculating the players with the max salary since 1999
-salary_max <- Salaries %>%
-  filter(yearID > 1999) %>%
-  group_by(yearID) %>%
-  mutate(max_salary = max(salary)) %>%
-  subset(salary == max_salary) %>%
-  ungroup()
-(salary_max)
-#checking how often somebody was mostpaid
-mostpaid_players <- salary_max %>%
-  group_by(playerID) %>%
-  summarise(mostpaid_player = n()) %>%
-  ungroup()
-(mostpaid_players)
-#getting the salary development of the max paid players (2000-2016)
-sal_mostp_pl <- Salaries %>%
-  filter(playerID %in% (salary_max$playerID))
-(sal_mostp_pl)
-```
-
-###Over time
-The two most earning players in 2015 and 2016 (Greinza01 and Kershcl01) were quite new in the game, whereas rodrial01 was the mostpaid player for a long time. Brownke01, playing until 2005, had a long career before he was most paid. After getting most money, he didnt develop anymore, his salary stayed the same. Giambja01 and Ramirma01 had a similar development in salary, with Ramirma01 getting less between 2007 and 2009 and then earning more again. 
-```{r salaries_mostpaid_players}
-sal_mostp_pl_all <- 
-  ggplot(data = sal_mostp_pl, mapping = aes(x = yearID, y = salary)) + 
-  geom_line(mapping = aes(color = playerID)) + 
-  geom_point(mapping = aes(color = playerID))+
-  scale_color_manual(values = c("#A7C4E3", "#74a9cf", "#4B88C8", "#0570b0", "#446a8b", "#323135")) +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
-  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
-  labs(x = "Year", y = "Salary per player in million US$", 
-       title = "Salaries of the mostpaid baseball-players over time")
-(sal_mostp_pl_all)
-```
-  
-###In 2016
-
-Let's also take a look at the most paid players in 2016 and their development. We filter the salaries table for data on 2016 and then get the playerIDs. We take all those players and arrange them descending to get the ones with the most salaries on top. Then we take the top 5 rows, using [1:5,]. For the development of the players, we take the Salaries table and look for the top5-earning players. 
-  
-Greinza01 and Kershcl01, most earning in 2015 and 2016, had a shorter career comparing to the others. Also Greinza01 had the highest salary to start with. The other players have been playing in Major League Baseball for at least 10 years before getting paid more than 25 million US\$.  
-
-```{r sal16_most_players}
-#getting players for only 2016, players with more than one salary will be excluded
-salaries16_players <- Salaries %>%
-  filter(yearID == 2016) %>%
-  group_by(playerID) %>%
-  summarise(n_plID = n()) %>%
-  filter(n_plID == 1)%>%
-  print()
-#getting the salaries for all these players
-salaries16 <- Salaries %>%
-  filter(yearID == 2016) %>%
-  filter(playerID %in% salaries16_players$playerID)%>%
-  print()
-#getting the names of the top5 earning players in 2016
-sal16_pl_top5 <- Salaries %>%
-  filter(playerID %in% salaries16$playerID) %>%
-  arrange(desc(yearID), desc(salary))%>%
-  print()
-sal16_pl_top5 <- sal16_pl_top5[1:5,]
-#getting the development of the top5 earning players
-sal_mostp_pl_in16 <- Salaries %>%
-  filter(playerID %in% sal16_pl_top5$playerID) %>%
-  arrange(desc(yearID), desc(salary))%>%
-  print()
-sal_mostp_pl_in16
-sal_mostp_pl_in16_plot <- ggplot(data = sal_mostp_pl_in16, mapping = aes(x = yearID, y = salary)) + 
-  geom_line(mapping = aes(color = playerID)) + 
-  scale_color_manual(values = c("#A7C4E3", "#74a9cf", "#4B88C8", "#446a8b", "#323135")) +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
-  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
-  labs(x = "Year", y = "Salary per player in million US$", 
-       title = "Salaries of the mostpaid baseball-players over time")
-(sal_mostp_pl_in16_plot)
-```
-  
-###High paid players - are they better? 
-
-To find out about the relationship of salary and being a good player we'll construct a linear model. We will compare the players' salaries to the Wins above replacement for position players and for pitching. To shorten the code, we make a function to calculate our linear model. 
-```{r lm_function}
-lm_own <- function(df, y1, x1, txt_y, txt_x, txt_title, plot = T) {
-  #formula has to be done seperately
-  #otherwise the lm would take either the names "y1" and "x1" without finding columns
-  #or find the columns df[[y1]] and df[[x1]] but using y1 and x1 also as names 
-  f <- as.formula(paste(y1, x1, sep = "~"))
-  lm_df <- lm(formula = f, data = df)
-  
-  if(plot == T) {
-    #adding the predictions and residuals
-    df <- df %>%
-    add_predictions(lm_df) %>%
-    add_residuals(lm_df)
-  
-    #plotting the data
-    lm_df_plot <- df %>%
-    #refering to the columns with df[[x|y1]]
-    ggplot(aes(df[[x1]])) +
-    geom_point(aes(y=df[[y1]])) +
-    #adding the prediction line
-    geom_line(aes(y=pred), color = "#3068A1") +
-    #naming the axes and title
-    labs(x = txt_x, y = txt_y, title = txt_title)}
-  else{return(lm_df)}
-}
-```
-
-For the model, we also need to prep our data. We make two tables, one containing WARpos and the other WARpit. We use an inner join to keep the rows with data on both salary and war, and use an anti-join to see what data we've lost. 
-
-  
-###In 2016
-
-###High paid players - are they better? 
-
-To find out about the relationship of salary and being a good player we'll construct a linear model. We will compare the players' salaries to the Wins above replacement for position players and for pitching. To shorten the code, we make a function to calculate our linear model. 
-
-For the model, we also need to prep our data. We make two tables, one containing WARpos and the other WARpit. We use an inner join to keep the rows with data on both salary and war, and use an anti-join to see what data we've lost. 
-```{r salaries16_prep}
-#using an inner join to only hold the rows with WAR and salary
-salaries16_pl_warPos <- inner_join(salaries16, pos_2016, "playerID")
-(anti_join(salaries16, pos_2016, "playerID"))
-(anti_join(pos_2016, salaries16, "playerID"))
-#using an inner join to only hold the rows with WAR and salary
-salaries16_pl_warPit <- inner_join(salaries16, pit_2016, "playerID")
-#using anti_joins in both directions to see the data loss
-(anti_join(salaries16, pit_2016, "playerID") %>% print())
-(anti_join(pit_2016, salaries16, "playerID") %>% print())
-```
-  
-####Salary and Wins above replacement
-Then we start the modeling. First we look at how WAR affects the salary. 
-```{r lm_war_salary}
-lm_warpos_salary <- lm_own(salaries16_pl_warPos, "salary", "weightedWAR", 
-                           "Salary in million US$", "Wins above replacement (pos. players)", 
-                           "Linear model on the player's salary and \n
-                           Wins above Replacement for position players") 
-(lm_warpos_salary)
-lm_warpit_salary <- lm_own(salaries16_pl_warPit, "salary", "weightedWAR", 
-                           "Salary in million US$", "Wins above replacement (pitching)", 
-                           "Linear model on the player's salary and \n
-                           Wins above Replacement for pitching")
-(lm_warpit_salary)
-```
-  
-####Wins above replacement and salary  
-Then we look the other direction: What influence has the salary on WAR?
-```{r lm_salary_war}
-lm_salary_warpos <- lm_own(salaries16_pl_warPos, "weightedWAR", "salary",
-                           "Wins above replacement (pos. players)", "Salary in million US$", 
-                           "Linear model on Wins above Replacement for position players \n
-                           and the player's salary")
-(lm_salary_warpos)
-lm_salary_warpit <- lm_own(salaries16_pl_warPit, "weightedWAR", "salary",
-                           "Wins above replacement (pitching)", "Salary in million US$", 
-                           "Linear model on Wins above Replacement for pitching \n
-                           and the player's salary")
-(lm_salary_warpit)
-```
-
-```{r comparing_salary_war}
-lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary)
-stargazer(lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary))
-lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary)
-stargazer(lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary,
-          type = "HTML"))
-```
-
 
 ##Mostpaying teams
 
@@ -1112,8 +941,146 @@ salaries16_wprop_max_prop <- lm_own(salaries16_teams_games, "sal_max_prop", "Wpr
 salaries16_wprop_sum <- lm_own(salaries16_teams_games, "sal_sum", "Wprop", "Money spent on players in million US$ per team", "% Games won", "Linear model of the Money spent on players per team and % Games won")
 (salaries16_wprop_sum)
 ```
+  
+##Mostpaid players
 
-#Of Age, Salaries and Handedness
+The rise in the salaries was mainly conducted by some high earninig players - why do they get paid so much more than others? Are they better? To answer these questions the players with the largest salaries each year (after 2000, where the gap was getting a lot bigger) were chosen for further analysis. 
+```{r salaries_mostp_pl_teams}
+#calculating the players with the max salary since 1999
+salary_max <- Salaries %>%
+  filter(yearID > 1999) %>%
+  group_by(yearID) %>%
+  mutate(max_salary = max(salary)) %>%
+  subset(salary == max_salary) %>%
+  ungroup()
+(salary_max)
+#checking how often somebody was mostpaid
+mostpaid_players <- salary_max %>%
+  group_by(playerID) %>%
+  summarise(mostpaid_player = n()) %>%
+  ungroup()
+(mostpaid_players)
+#getting the salary development of the max paid players (2000-2016)
+sal_mostp_pl <- Salaries %>%
+  filter(playerID %in% (salary_max$playerID))
+(sal_mostp_pl)
+```
+
+###Over time
+The two most earning players in 2015 and 2016 (Greinza01 and Kershcl01) were quite new in the game, whereas rodrial01 was the mostpaid player for a long time. Brownke01, playing until 2005, had a long career before he was most paid. After getting most money, he didnt develop anymore, his salary stayed the same. Giambja01 and Ramirma01 had a similar development in salary, with Ramirma01 getting less between 2007 and 2009 and then earning more again. 
+```{r salaries_mostpaid_players}
+sal_mostp_pl_all <- 
+  ggplot(data = sal_mostp_pl, mapping = aes(x = yearID, y = salary)) + 
+  geom_line(mapping = aes(color = playerID)) + 
+  geom_point(mapping = aes(color = playerID))+
+  scale_color_manual(values = c("#A7C4E3", "#74a9cf", "#4B88C8", "#0570b0", "#446a8b", "#323135")) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
+  labs(x = "Year", y = "Salary per player in million US$", 
+       title = "Salaries of the mostpaid baseball-players over time")
+(sal_mostp_pl_all)
+```
+  
+###In 2016
+
+Let's also take a look at the most paid players in 2016 and their development. We filter the salaries table for data on 2016 and then get the playerIDs. We take all those players and arrange them descending to get the ones with the most salaries on top. Then we take the top 5 rows, using [1:5,]. For the development of the players, we take the Salaries table and look for the top5-earning players. 
+  
+Greinza01 and Kershcl01, most earning in 2015 and 2016, had a shorter career comparing to the others. Also Greinza01 had the highest salary to start with. The other players have been playing in Major League Baseball for at least 10 years before getting paid more than 25 million US\$.  
+
+```{r sal16_most_players}
+#getting players for only 2016, players with more than one salary will be excluded
+salaries16_players <- Salaries %>%
+  filter(yearID == 2016) %>%
+  group_by(playerID) %>%
+  summarise(n_plID = n()) %>%
+  filter(n_plID == 1)%>%
+  print()
+#getting the salaries for all these players
+salaries16 <- Salaries %>%
+  filter(yearID == 2016) %>%
+  filter(playerID %in% salaries16_players$playerID)%>%
+  print()
+#getting the names of the top5 earning players in 2016
+sal16_pl_top5 <- Salaries %>%
+  filter(playerID %in% salaries16$playerID) %>%
+  arrange(desc(yearID), desc(salary))%>%
+  print()
+sal16_pl_top5 <- sal16_pl_top5[1:5,]
+#getting the development of the top5 earning players
+sal_mostp_pl_in16 <- Salaries %>%
+  filter(playerID %in% sal16_pl_top5$playerID) %>%
+  arrange(desc(yearID), desc(salary))%>%
+  print()
+sal_mostp_pl_in16
+sal_mostp_pl_in16_plot <- ggplot(data = sal_mostp_pl_in16, mapping = aes(x = yearID, y = salary)) + 
+  geom_line(mapping = aes(color = playerID)) + 
+  scale_color_manual(values = c("#A7C4E3", "#74a9cf", "#4B88C8", "#446a8b", "#323135")) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
+  labs(x = "Year", y = "Salary per player in million US$", 
+       title = "Salaries of the mostpaid baseball-players over time")
+(sal_mostp_pl_in16_plot)
+```
+  
+###High paid players - are they better? 
+
+To find out about the relationship of salary and being a good player we'll construct a linear model. We will compare the players' salaries to the Wins above replacement for position players and for pitching. To shorten the code, we made a function to calculate our linear model (saved in help.R). 
+
+For the model, we also need to prep our data. We make two tables, one containing WARpos and the other WARpit. We use an inner join to keep the rows with data on both salary and war, and use an anti-join to see what data we've lost. 
+
+```{r salaries16_prep}
+#using an inner join to only hold the rows with WAR and salary
+salaries16_pl_warPos <- inner_join(salaries16, pos_2016, "playerID")
+(anti_join(salaries16, pos_2016, "playerID"))
+(anti_join(pos_2016, salaries16, "playerID"))
+#using an inner join to only hold the rows with WAR and salary
+salaries16_pl_warPit <- inner_join(salaries16, pit_2016, "playerID")
+#using anti_joins in both directions to see the data loss
+(anti_join(salaries16, pit_2016, "playerID") %>% print())
+(anti_join(pit_2016, salaries16, "playerID") %>% print())
+```
+  
+####Salary and Wins above replacement
+Then we start the modeling. First we look at how WAR affects the salary. 
+```{r lm_war_salary}
+lm_warpos_salary <- lm_own(salaries16_pl_warPos, "salary", "weightedWAR", 
+                           "Salary in million US$", "Wins above replacement (pos. players)", 
+                           "Linear model on the player's salary and \n
+                           Wins above Replacement for position players") 
+(lm_warpos_salary)
+lm_warpit_salary <- lm_own(salaries16_pl_warPit, "salary", "weightedWAR", 
+                           "Salary in million US$", "Wins above replacement (pitching)", 
+                           "Linear model on the player's salary and \n
+                           Wins above Replacement for pitching")
+(lm_warpit_salary)
+```
+  
+####Wins above replacement and salary  
+Then we look the other direction: What influence has the salary on WAR?
+```{r lm_salary_war}
+lm_salary_warpos <- lm_own(salaries16_pl_warPos, "weightedWAR", "salary",
+                           "Wins above replacement (pos. players)", "Salary in million US$", 
+                           "Linear model on Wins above Replacement for position players \n
+                           and the player's salary")
+(lm_salary_warpos)
+lm_salary_warpit <- lm_own(salaries16_pl_warPit, "weightedWAR", "salary",
+                           "Wins above replacement (pitching)", "Salary in million US$", 
+                           "Linear model on Wins above Replacement for pitching \n
+                           and the player's salary")
+(lm_salary_warpit)
+```
+
+```{r comparing_salary_war}
+lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary)
+stargazer(lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary))
+lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary)
+stargazer(lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary,
+          type = "HTML"))
+```
+
+
+
+#Of Handedness, Age and Salaries 
 The last chapter looks at all the factors described above, and figures out the relation between age, salary and handedness and the baseball-player's success. The sucess of a baseball player is measured by the Wins Above Replacement (WAR). 
 
 ##Linear Model
