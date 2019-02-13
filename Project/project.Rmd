@@ -31,15 +31,29 @@ options(warn=-1)
 
 ##Introduction   
 
-Sean Lahman's Baseball Database (Link: http://www.seanlahman.com/baseball-archive/statistics/) contains pitching, hitting, and fielding statistics for Major League Baseball (MLB) from 1871 through 2018 (for presumably every player that ever played, as well as every team that ever existed).
+Sean Lahman's Baseball Database (Link: http://www.seanlahman.com/baseball-archive/statistics/) contains pitching, hitting, and fielding statistics for Major League Baseball (MLB) from 1871 through 2018 (for presumably every player that ever played, as well as every team that ever existed). In this project, we will focus on three aspects of baseball: the player's handedness, the age and the salaries. We will use the following data tables: 
+  * Appearances:    
+  ...
+  * People:  
+  all baseball players since 1871, with statistical values like birth date, first game, last game, handedness
+  * Teams:  
+  ...
+  * Salaries:  
+  per player and team, years 1985-2016
+  
+From other databases we use: 
+  * warPit (from ... )
+  * warPos (from ... )
+  * Salaries_US (from OECD, https://data.oecd.org/earnwage/average-wages.htm#indicator-chart)
+  
+  
+Section 1 is concerened with handedness. More specifically, we ask whether the distribution of right-, left- and both-handed players has changed since the MLB's inception in 1871, and whether a player's expected value differs as a function of handedness. 
 
-Section 1 is concerened with handedness. More specifically, we asked whether the distribution of right-, left- and both-handed players has changed since the MLB's inception in 1871, and whether a player's expected value differs as a function of handedness. 
+In Section 2, we look at the distribution of age and how a team's average age could be connected to its success (measured by wins). We also look at the relationship between a player's age and the expected value to his team.  
 
-In Section 2, we looked at the distribution of age and how a team's average age could be connected to its success (measured by wins). We also looked at the relationship between a player's age and the expected value to his team.  
+Section 3 is all about player salaries. How did player salaries change over years and are there any differences between leagues? How do baseball players' salaries compare to the average US income? Also, the highest amounts of money spent by teams and the most earning players are analyzed. Leads spending a lot of money on a team to success? Do high earning players play better?
 
-Section 3 is all about player salaries. How did player salaries change over years? Are there any differences between leagues with respect to player salaries? How much did the highest paid players earn? How much did the highest paying teams pay? And, how do baseball players salaries compare to the average US income?  
-
-Finally, in section 4 we use handedness, age, and salary, and built a linear model to predict a player's expected value to his team given these covariates. 
+Finally, in section 4 we use handedness, age, and salary, to build a linear model to predict a player's expected value to his team given these covariates. 
 
 #Of Handedness and Baseball  
 
@@ -530,7 +544,7 @@ age_c_team %>%
 stargazer(age_team_perf_mod, align=T, type='html', style="all2")
 ```
 
-If we believe in this model than we could argue, since there is a positive slope, that it would be advantageous for a team to field (exclusivly?) older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
+If we believed in this model, we could argue, since there is a positive slope, that it would be advantageous for a team to field (exclusivly?) older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
 
 ### Season 1985 - 2016
 ```{r}
@@ -666,31 +680,34 @@ stargazer(age_war_combo_mod, align=T, type='html')
 ```
 
 # Of Salaries and Baseball
-After looking at the average age of baseball players, we take a look on what they earn. Is it more/less depending on the league? How is the development compared to the average US-salary? After answering these questions, the mostpaid players in the 2000s and mostpaying teams in 2016 are also listed. The main questions, if a good baseball player also gets paid high, and if a team that spends much on their players, wins more, are asked at the end. 
+After looking at the average age of baseball players, we take a look at what they earn. Is it more/less depending on the league? How is the salary development compared to the average US-salary? After answering these questions, the mostpaying teams in 2016 and mostpaid players in the 2000s and 2016 are also listed. The main questions, if a team that spends much on their players, wins more, and if a good baseball player also gets paid high, are asked at the end. 
 
 ##Adjusting the statistics
-Before starting the analysis, we have to prepare our data. For the salaries, we have one table containing the average US-salaries from 1989-2017, and another table containing all baseball-players' salaries from 1989-2016. 
+Before starting the analysis, we have to prepare our data. For the salaries, we have the table `Salaries_US` containing the average wages from 1989-2017, and another table `Salaries` containing all baseball-players' salaries from 1989-2016. In both tables, we look at the (average) million US$ earned per year. 
 
 ###US-Salaries
-The statistics for the average wage in the US came from the OECD (https://data.oecd.org/earnwage/average-wages.htm#indicator-chart). Unfortunately, we didn't find more accurate data for the wages than the average. Be careful with interpreting the numbers, as with wages, the mean and the median differ a lot. 
-Within the dataset some columns were dropped, and the average development in percent was calculated. 
+The statistics for the average wage in the US came from the OECD (https://data.oecd.org/earnwage/average-wages.htm#indicator-chart). Unfortunately, we didn't find more accurate data for the wages than the average. Be careful with interpreting the data, as with wages, the mean and the median differ a lot. 
+Within the data preparation some columns were dropped, and the average development in percent was calculated. 
 ```{r salaries_us_adjust}
 #renaming the columns
 colnames(Salaries_US) = c("country", "indicator", "subject", "currency", "frequency", "yearID", "av_wage_US", "Flag_codes")
 Salaries_US <- Salaries_US %>%
   #dropping columns
   subset(select = -c(country, indicator, subject, frequency, Flag_codes)) %>%
-  #calculating average development
-  mutate(av_wage_US = av_wage_US/1000000,
-         av_wage_perc = ((av_wage_US/lag(av_wage_US) - 1) * 100),
-         av_wage_100perc = ((av_wage_US-min(av_wage_US))/max(av_wage_US)))
+  mutate(
+    #wages converted into million US$
+    av_wage_US = av_wage_US/1000000,
+    #calculating average development
+    av_wage_perc = ((av_wage_US/lag(av_wage_US) - 1) * 100),
+    av_wage_100perc = ((av_wage_US-min(av_wage_US))/max(av_wage_US)))
 (Salaries_US)
 ```
   
 ###Baseball-Salaries
-With the baseball salaries, some statistical values, like mean, max, min and median were calculated. Also the average development of the mean salary was computed to compare it to the US salaries. 
+With the baseball salaries, some statistical values, like mean, max, min and median were calculated. Also the average development of the mean salary was computed to compare it to the US salaries. `sal_bb_stats` contains the statistics for each year. 
 ```{r salaries_adjust}
 Salaries <- Salaries %>%
+  #converting into million US$
   mutate(salary = salary/1000000)
 (Salaries)
 sal_bb_stats <- Salaries %>%
@@ -711,7 +728,7 @@ sal_bb_stats_90 <- sal_bb_stats %>%
 ```
   
 ##Overview
-The boxplot shows the median salary, and the first and third quantile. There are a lot of outliers, the mean salary is also shown. In 2000 there was a leap in the median salary, and in and after 2009, the highest salaries so far were payed. We're going to take a look at that afterwards. 
+To get to know the data, a boxplot is made. It shows the median salary, and the first and third quantile. There are a lot of outliers, especially in the 2000's. The mean salary is also shown. In 2000 there was a leap in the median salary, and in and after 2009, the highest salaries so far were payed. We're going to take a look at those afterwards. 
 ```{r salaries_statistics, cache = T}
 summary(Salaries)
 #boxplot with the player salaries
@@ -730,14 +747,18 @@ sal_boxplot <- ggplot() +
 To find out about missing data, the number of players and teams was analyzed. Explicitly missing data is not stored in the tables we have, but there seems to be implicitly missing data. The number of players spikes a lot through the years, and there are also players, who got paid by more than one team a year, which can be seen in the difference between the number of players and the distinct number of players per year. As this analysis is about average salaries, we will keep all the data, because wheter somebody was paid twice or once does not matter. They played more, so they earned more. 
 ```{r salaries_missing_data, cache = T}
 #graph with number of players per year
-sal_bb_nbplayers <- ggplot(data = sal_bb_stats) + 
-  geom_line(mapping = aes(x = yearID, y = n_dist_players), color = "#384F5d") +
-  geom_line(mapping = aes(x = yearID, y = n_players), color = "#3068A1") + 
+sal_bb_nbplayers <- sal_bb_stats %>%
+  gather(key="statistics_type", value = "Number_of_players", n_dist_players, n_players) %>%
+  print() %>%
+  ggplot() + 
+  geom_line(mapping = aes(x = yearID, y = Number_of_players, color = statistics_type)) +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   scale_x_continuous(breaks = Salaries$yearID) +
-  labs(x = "Year", y = "Number of players", 
-       title = "Number of players with salary information each year")
-div(ggplotly(sal_bb_nbplayers), align = "center")
+  labs(x = "Year", y = "Number of players", color = "Number of players",
+       title = "Number of players with salary information each year") +
+  scale_color_manual(labels = c("Distinct number \nof players", "Number of players"), values = c("#384F5d", "#3068A1"))
+(sal_bb_nbplayers)
+
 #graph with number of teams per year
 sal_bb_nbteams <- ggplot(data = sal_bb_stats, mapping = aes(x = yearID, y = n_teams)) + 
   geom_line(color = "#3068A1") + 
@@ -745,7 +766,7 @@ sal_bb_nbteams <- ggplot(data = sal_bb_stats, mapping = aes(x = yearID, y = n_te
   scale_x_continuous(breaks = Salaries$yearID) +
   labs(x = "Year", y = "Number of teams", 
        title = "Number of Teams with salary information each year")
-div(ggplotly(sal_bb_nbteams), align = "center")
+(sal_bb_nbteams)
 ```
 
 ##Salaries within the leagues
@@ -878,7 +899,8 @@ div(ggplotly(sal_mostp_teams_mean), align = "center")
 For the teams, we also want to analyze if the teams paying high salaries for their players also win the most. For this we will use the Wins per Games from the Age table. The tables are joined together by a left_join. 
 
 ```{r sal_teams_prep}
-salaries16_teams <- salaries16 %>%
+salaries16_teams <- Salaries %>%
+  filter(yearID == 2016) %>%
   group_by(teamID) %>%
   summarise(n_players = n(), 
             sal_min = min(salary),
