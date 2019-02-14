@@ -539,19 +539,7 @@ age_c_team %>%
 stargazer(age_team_perf_mod, align=T, type='html', style="all2")
 ```
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 If we believed in this model, we could argue, since there is a positive slope, that it would be advantageous for a team to field (exclusivly?) older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
-=======
-If we believe in this model than we could argue, since there is a positive slope, that it would be advantageous for a team to field older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
->>>>>>> 36e60f7184ec27bebfcd338d98846ef9f60acd81
-=======
-If we believe in this model than we could argue, since there is a positive slope, that it would be advantageous for a team to field older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
->>>>>>> a4703cb141a13aeb8c31e225b303239fbafa5e28
-=======
-If we believe in this model than we could argue, since there is a positive slope, that it would be advantageous for a team to field older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
->>>>>>> a4703cb141a13aeb8c31e225b303239fbafa5e28
 
 ### Season 1985 - 2016
 ```{r}
@@ -638,8 +626,7 @@ age_war_pit <- left_join(age_c_players, pit_2016 %>%
   group_by(playerID,birthDate,age,weightedWAR) %>% 
   summarise(G_all = sum(G_all), GS = sum(GS)) %>%
   ungroup()
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 ```
 
 In regards to missing values, in the WAR data for position players we miss
@@ -650,30 +637,6 @@ In regards to missing values, in the WAR data for position players we miss
 age_war_pos <- age_war_pos %>% drop_na(weightedWAR)
 ```
 
-=======
-```
-
-In regards to missing values, in the WAR data for position players we miss
-`r dim(age_war_pos %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war_pos)[1]`. And for pitchers we miss
-`r dim(age_war_pit %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war_pit)[1]`.
-
-```{r}
-age_war_pos <- age_war_pos %>% drop_na(weightedWAR)
-```
-
->>>>>>> a4703cb141a13aeb8c31e225b303239fbafa5e28
-=======
-```
-
-In regards to missing values, in the WAR data for position players we miss
-`r dim(age_war_pos %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war_pos)[1]`. And for pitchers we miss
-`r dim(age_war_pit %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war_pit)[1]`.
-
-```{r}
-age_war_pos <- age_war_pos %>% drop_na(weightedWAR)
-```
-
->>>>>>> a4703cb141a13aeb8c31e225b303239fbafa5e28
 Implicitly missing values?
 
 Here is how our model looks:
@@ -1083,7 +1046,7 @@ We now saw the teams and their salaries. We also want to take a look at the play
 
 To get the most paid players of 2016 and then look at their development we use the `Salaries` table. 
 
-Kershcl01, most earning in 2015 and 2016, had a shorter career (like Priceda01) comparing to the others. Priceda01 had the highest salary to start with. The other players have been playing in Major League Baseball for at least 10 years before getting paid more than 25 million US$.  
+Kershcl01, most earning in 2015 and 2016, had a shorter career (like Priceda01) comparing to the others. Priceda01 had the highest salary to start with. The other players have been playing in Major League Baseball for at least 10 years before getting paid more than 25 million US\$.  
 
 ```{r sal16_most_players}
 #getting players for only 2016, players with more than one salary will be excluded
@@ -1188,8 +1151,6 @@ lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary)
 stargazer(lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary,
           type = "HTML"))
 ```
-
-
 
 #Of Handedness, Age and Salaries 
 The last chapter looks at all the factors described above, and figures out the relation between age, salary and handedness and the baseball-player's success. The sucess of a baseball player is measured by the Wins Above Replacement (WAR). 
