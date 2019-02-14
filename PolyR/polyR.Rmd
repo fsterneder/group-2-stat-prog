@@ -434,7 +434,7 @@ while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) && r
 }
 
 for(i in seq_along(expert)){
-  print(paste(expert[[i]]$name,expert[[i]]$rejectedHyp, expert[[i]]$pass,pvals[unlist(expert[[i]]$rejectedHyp)]))
+  #print(paste(expert[[i]]$name,expert[[i]]$rejectedHyp, expert[[i]]$pass,pvals[unlist(expert[[i]]$rejectedHyp)]))
 }
 ```
 
@@ -464,3 +464,99 @@ names(expertSC) <- c("const","geom")
 # Single wealth object
 
 > Make  both  experts  from  the  part  d  use  a  single  wealth  object.   This will require you to create a separate wealth object that is passed to both of the bidders, and modify the bidder objects to change the wealth object appropriately.
+
+```{r}
+makeBidderGeomSW = function(frac = .5) {
+  list( 
+    state = function() { list(frac = frac) },
+    bidAccepted = function(a) { wealth <<- wealth + a },
+    bidRejected = function(d) { wealth <<- wealth - d },
+    bid = function()  { ifelse(wealth > .0001, wealth*frac, wealth) }
+    # ifelse statement ensures termination by eventually bidding remaining wealth
+  )
+}
+
+# this bidder always bids a constant amount given by const
+makeBidderConstSW = function(const=.01) {
+  list( 
+    state = function() { list(const = const) },
+    bidAccepted = function(a) { wealth <<- wealth + a },
+    bidRejected = function(d) { wealth <<- wealth - d },
+    bid = function()  { ifelse(wealth >= const, const, wealth) }  
+    # can't bid more than current wealth
+  )
+}
+
+makeExpertSW <- function (bidder, constructor) {
+  list(
+    name         = "Geom",
+    bidder       = bidder,
+    constructor  = constructor,
+    state        = function() { list(position = constructor$state()$position) },
+    bid          = function() { bidder$bid() },
+    feature      = function() { constructor$generateFeature() },
+    finishedPass = function() { constructor$state()$position == 0 },
+    finished     = function() { constructor$state()$nactive == 0 },
+    passTest     = function(a) {
+      bidder$bidAccepted(a)
+      constructor$dropLastFeature() 
+    },
+    pay          = function(payment) {
+      bidder$bidRejected(payment)
+    },
+    udPass       = function() { constructor$udPass() }
+  )
+}
+
+makeMultiExpertSW <- function(..., ncolumns) {
+  output <- list()
+  for (i in seq_along(list(...))) {
+    output[[i]] <- makeExpert(
+      list(...)[[i]],
+      makeRawSource(ncolumns)
+    )
+  }
+  output
+}
+
+wealth = omega/2
+expertConstSW = makeBidderConstSW(const=.01)
+expertGeomSW  = makeBidderGeomSW(frac=.1)
+
+expertSW = makeMultiExpertSW(expertConstSW, expertGeomSW, ncolumns=length(pvals))
+names(expertSW) <- c("const","geom")
+expertSW$const$name = "Const"
+
+for(i in seq_along(expertSW)){
+  expertSW[[i]]$rejectedHyp <- list()
+  expertSW[[i]]$pass <- 1
+}
+
+while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) && wealth > 0) {
+  bid = list(const = expertSW$const$bidder$bid(), geom = expertSW$geom$bidder$bid())
+
+  ifelse(bid$const > bid$geom, wstr <- "const", wstr <- "geom")
+
+  winner <- expertSW[[wstr]]
+  index = winner$feature()
+  maxBid <- max(unlist(bid))
+
+  #print(paste("winner:",wstr ,"index:", index, "wealth:", wealth, "bid:", maxBid, "p:", pvals[min(unlist(index))]))
+
+  winner$pay(maxBid)
+
+  if (pvals[index] < maxBid) {
+    winner$passTest(omega)
+    winner$rejectedHyp[[1+length(winner$rejectedHyp)]] <- index
+  }
+  if (winner$finishedPass()) {
+    winner$udPass()
+    winner$pass <- winner$pass+1
+  }
+  expertSW[[wstr]] <- winner
+}
+
+for(i in seq_along(expertSW)){
+  print(paste(expertSW[[i]]$name,expertSW[[i]]$rejectedHyp, expertSW[[i]]$pass,pvals[unlist(expertSW[[i]]$rejectedHyp)]))
+}
+```
