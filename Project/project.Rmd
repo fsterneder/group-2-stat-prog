@@ -5,16 +5,12 @@ date: "`r Sys.Date()`"
 output:
   html_document:
     code_folding: hide
-    css: rstyle.css
+    css: ../rstyle.css
     highlight: tango
     number_sections: yes
     theme: cosmo
     toc: yes
     toc_float: yes
-  pdf_document:
-    toc: yes
-  word_document:
-    toc: yes
 subtitle: Programming in Statistics - Project
 ---
 Creative Commons Attribution-ShareAlike 3.0 Unported License
