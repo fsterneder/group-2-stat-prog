@@ -62,7 +62,7 @@ The project also focuses on the year 2016, although some analyses are wider. Thi
   
 There are four different sections, which will walk you through the baseball (2016) analysis: 
   
-Section 1 is concerened with handedness. More specifically, we ask whether the distribution of right-, left- and both-handed players has changed since the MLB's inception in 1871, and whether a player's expected value differs as a function of handedness. 
+Section 1 is concerned with handedness. More specifically, we ask whether the distribution of right-, left- and both-handed players has changed since the MLB's inception in 1871, and whether a player's expected value differs as a function of handedness. 
 
 In Section 2, we look at the distribution of age and how a team's average age could be connected to its success (measured by wins). We also look at the relationship between a player's age and the expected value to his team.  
 
@@ -160,7 +160,7 @@ plr_bats
 ####Plot  
 We figured that the number of observations a given year's proportional estimate is based upon may be an important piece of information. In order to include this information, we used `ggplotly()` as this allowed for the inclusion of N in `plotly`'s own "hover text". 
 In more detail, we first created the `ggplot`object `batsPlot`  using `geom_lines`to connect each year's proportions, with separate lines for each handedness category. Notice that we specified a third aesthetic "label = N" in addition to the x- and y-coordinates. This third aesthetic was necessary, as the `tooltip`argument from `ggplotly()` can only display data that are specified as aesthetic arguments in the `ggplot`object. 
-If you hover your cursor over any data point in the plot, a text element should pop up, displaying the year, the proportion and the total number of observations, N. To specify which aesthetics are displayed by `ggplotly`, we provided the  `tooltip` argument with a string vector of the follwoing aesthetics: "year", "proportion", "N". 
+If you hover your cursor over any data point in the plot, a text element should pop up, displaying the year, the proportion and the total number of observations, N. To specify which aesthetics are displayed by `ggplotly`, we provided the  `tooltip` argument with a string vector of the following aesthetics: "year", "proportion", "N". 
 
 
 ```{r}
@@ -216,7 +216,7 @@ Again, the plot might have us think that the proportion of right handed throwers
 
 ##Wins Above Replacement and Hand Preference in 2016     
 
-Wins Above Replacement (WAR) is an often used "sabermetric" to quantify how valuable a given player is to his team's success. It is the number of a team's additional wins that are due to the player as compared to the number of expected wins if the player had been replaced by a hypothetical average player. The computation of WAR is quite complex, and, depending on whether we're dealing with a position player or a pitcher, WAR is computed differently. Luckily, baseball-reference.com provides WAR statistics for (alledgedly) every player that has ever played in the league taking into account a player's position (i.e., there are two data tables: One for position players and one for pitchers; Link: https://www.baseball-reference.com/about/war_explained.shtml).  
+Wins Above Replacement (WAR) is an often used "sabermetric" to quantify how valuable a given player is to his team's success. It is the number of a team's additional wins that are due to the player as compared to the number of expected wins if the player had been replaced by a hypothetical average player. The computation of WAR is quite complex, and, depending on whether we're dealing with a position player or a pitcher, WAR is computed differently. Luckily, baseball-reference.com provides WAR statistics for (allegedly) every player that has ever played in the league taking into account a player's position (i.e., there are two data tables: One for position players and one for pitchers; Link: https://www.baseball-reference.com/about/war_explained.shtml).  
 We downloaded Baseball Reference's "War for Position Players" (`warPos`) and "War for Pitchers" (`warPit`) tables and combined these with Lahman's baseball data bank to use WAR as the outcome variable of our linear models (see below).   
 
 All of our linear models were restricted in that we only used data from the 2016 season. 
@@ -445,10 +445,10 @@ age_c_players <-
   left_join(Appearances %>% filter(yearID == age_current), People, "playerID") %>%
   mutate(birthDate = as_date(ymd(paste(birthYear, birthMonth, birthDay, sep = "-")))) %>%
   mutate(age = age_calc(birthDate, ymd(age_const(age_current)))) %>%
-  select(playerID, teamID, birthDate, age, nameFirst, nameLast, G_all, GS) 
+  select(playerID, teamID, birthDate, age, nameFirst, nameLast, G_all, GS)
 ```
 
-We define active as in "played in season `r age_current`". Also we calculate the age with the start of the season (April 3rd).
+We define active as in "played in season `r age_current`". That means if a player was in the roster of a team but didn't at least made on appearance, then he will not be considered in our following analysis. Also we calculate the age with the start of the season of 2016 (April 3rd).
 
 We find that the average active professional baseball player , in the season of `r age_current`, was born `r mean(age_c_players$birthDate)` and was therefore `r floor(age_calc(mean(age_c_players$birthDate),ymd(age_const(age_current))))` years old. 
 
@@ -487,7 +487,7 @@ age_c_team %>%
 ```
 So now we know that the team with the - on average - youngest players are the `r (age_c_team %>% filter(meanAge == min(meanAge)))$name` while the `r (age_c_team %>% filter(meanAge == max(meanAge)))$name` deploys - again, on average - the oldest players. The difference between these 'extremes' is `r signif(max(age_c_team$meanAge) - min(age_c_team$meanAge),3)` years and is less than one might would have expected.
 
-We still want to know more, let's look at the related boxplot.
+We still want to know more, let's look at the related box plot.
 
 ```{r}
 age_c_players %>% 
@@ -536,10 +536,10 @@ As we can can see, there are some differences if we weight the playing time, but
 
 With the information we got so far we build a linear model to see if there is a connection between the percentage of games won by a team and their weighted average age. The model looks like this:
 
-$$ \hat{\text{Wins%}}_i = \hat{\beta_0} + \hat{\beta_1} \text{weighted Average Age}_i $$
+$$ \widehat{\text{Wins%}}_i = \hat{\beta_0} + \hat{\beta_1} \text{weighted Average Age}_i $$
 
 ```{r}
-age_c_team <- age_c_team %>% mutate(Wprop = W/G)
+age_c_team <- age_c_team %>% mutate(Wprop = (W/G)*100)
 age_team_perf_mod <- lm(Wprop ~ weightByG, data = age_c_team)
 age_c_team <- age_c_team %>% add_predictions(age_team_perf_mod) %>% add_residuals(age_team_perf_mod)
 
@@ -554,7 +554,7 @@ age_c_team %>%
 stargazer(age_team_perf_mod, align=T, type='html', style="all2")
 ```
 
-If we believed in this model, we could argue, since there is a positive slope, that it would be advantageous for a team to field (exclusivly?) older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
+If we believed in this model, we could argue, since there is a positive slope, that it would be advantageous for a team to field older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
 
 ### Season 1985 - 2016
 ```{r}
@@ -582,7 +582,7 @@ age_f_team <-
   mutate(gProp = age*(G_all/G_avg), gsProp = age*(GS/GS_avg)) %>%
   summarise(weightByG = mean(gProp), weightByGS = mean(gsProp)) %>%
   left_join(age_f_team, c("teamID","yearID")) %>%
-  mutate(Wprop = W/G)
+  mutate(Wprop = (W/G)*100)
 ```
 
 Now that we look at data from `r age_current - age_from` seasons we find that the difference between the team with the highest and the lowest average team age is now `r signif(max(age_f_team$meanAge) - min(age_f_team$meanAge),3)` years. We also find fun stuff, like the `r age_t <- (age_f_team %>% filter(L == max(age_f_team$L))); paste(age_t$yearID,age_t$name)` who lost `r age_t$L` games while the `r age_t <- (age_f_team %>% filter(G == min(age_f_team$G)))[1,] ; paste(age_t$yearID, age_t$name)` only played `r age_t$G`.
@@ -591,12 +591,12 @@ Let's have a look at our model.
 
 ```{r}
 age_team_perf_mod <- lm(Wprop ~ weightByG, data = age_f_team)
-age_f_team <- age_f_team %>% add_predictions(age_team_perf_mod) %>% add_residuals(age_team_perf_mod)
+age_f_team <- age_f_team %>% add_predictions(age_team_perf_mod, var="ls") %>% add_residuals(age_team_perf_mod)
 
 age_f_team %>% 
   ggplot(aes(weightByG)) + 
   geom_point(aes(y=Wprop)) +
-  geom_line(aes(y=pred),color="#3068A1") +
+  geom_line(aes(y=ls),color="#3068A1") +
   labs(x = "Average Team Age Weighted By Games Played", y = "% Games won", title = "Linear Model Visualization (least square)")
 ```
 
@@ -615,7 +615,8 @@ age_f_team <- age_f_team %>% add_predictions(age_team_perf_mod) %>% add_residual
 age_f_team %>% 
   ggplot(aes(weightByG)) + 
   geom_point(aes(y=Wprop)) +
-  geom_line(aes(y=pred),color="#3068A1") +
+  geom_line(aes(y=pred),color="red") +
+  geom_line(aes(y=ls),color="#3068A1") +
   labs(x = "Average Team Age Weighted By Games Played", y = "% Games won", title = "Linear Model Visualization (LOESS)")
 ```
 
@@ -644,18 +645,14 @@ age_war_pit <- left_join(age_c_players, pit_2016 %>%
 
 ```
 
-In regards to missing values, in the WAR data for position players we miss
-`r dim(age_war_pos %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war_pos)[1]`. And for pitchers we miss
-`r dim(age_war_pit %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war_pit)[1]`.
+In regards to missing values, in the WAR data for position players we miss `r dim(age_war_pos %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war_pos)[1]`. And for pitchers we miss `r dim(age_war_pit %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war_pit)[1]`.
 
 ```{r}
 age_war_pos <- age_war_pos %>% drop_na(weightedWAR)
 ```
 
-Implicitly missing values?
-
 Here is how our model looks:
-$$ \hat{\text{weightedWAR}}_i = \hat{\beta_0} + \hat{\beta_1} \text{age}_i $$
+$$ \widehat{\text{weightedWAR}}_i = \hat{\beta_0} + \hat{\beta_1} \text{Age}_i $$
 
 ```{r}
 age_war_pos_mod <- age_war_pos %>% lm(formula = weightedWAR ~ age)
@@ -791,7 +788,7 @@ sal_boxplot <- ggplot() +
   
 ###About missing data
 
-To find out about missing data, the number of players and teams was analyzed. Explicitly missing data is not stored in the tables we have, but there seems to be implicitly missing data. The number of players spikes a lot through the years, and there are also players, who got paid by more than one team a year, which can be seen in the difference between the number of players and the distinct number of players per year. As this analysis is about average salaries, we will keep all the data, because wheter somebody was paid twice or once does not matter. They played more, so they earned more. For the analysis of the players, these will be dropped, but this will be explained later on. 
+To find out about missing data, the number of players and teams was analyzed. Explicitly missing data is not stored in the tables we have, but there seems to be implicitly missing data. The number of players spikes a lot through the years, and there are also players, who got paid by more than one team a year, which can be seen in the difference between the number of players and the distinct number of players per year. As this analysis is about average salaries, we will keep all the data, because whether somebody was paid twice or once does not matter. They played more, so they earned more. For the analysis of the players, these will be dropped, but this will be explained later on. 
 ```{r salaries_missing_data, cache = T}
 #preparing the graph with number of players per year
   #gathering the data to make to lines with 1 variable
