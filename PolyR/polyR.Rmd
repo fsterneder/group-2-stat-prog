@@ -403,12 +403,17 @@ rejectedHyp = list()
 pass = 1
 
 while (!reduce(expert, function(x,y) x$finished() || y$finished()) && reduce(expert, function(x,y) x$state()$wealth > 0 || y$state()$wealth > 0)) {
-  index = list(const = expert$const$feature(), geom = expert$geom$feature())
+  #index = list(const = expert$const$feature(), geom = expert$geom$feature())
   bid = list(const = expert$const$bidder$bid(), geom = expert$geom$bidder$bid())
-  print(index)
 
   ifelse(bid$const > bid$geom, winner <- expert$const, winner <- expert$geom)
+
+  index = winner$feature()
   maxBid <- max(unlist(bid))
+
+  winner$pay(maxBid)
+
+  print(paste("index: ", index, "\n", "wealth: ", winner$state()$wealth, "bid: ", maxBid))
 
   if (pvals[min(unlist(index))] < maxBid) {
     winner$passTest(omega)
