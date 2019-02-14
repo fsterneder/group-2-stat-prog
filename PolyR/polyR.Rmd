@@ -396,35 +396,46 @@ nNull = 20; nNonNull = 20
 nulls = runif(nNull)
 nonNulls = runif(nNonNull, 0, .05)
 pvals = sample(c(nulls, nonNulls)) 
-
 omega = .1
+
 expertConst = partial(makeBidderConst, const=.1)
 expertGeom  = partial(makeBidderGeom,  frac=.1)
 expert = makeMultiExpert(expertConst, expertGeom, ncolumns=length(pvals), wealth=omega/2)
 names(expert) <- c("const","geom")
-rejectedHyp = list()
-pass = 1
+expert$const$name = "Const"
 
-while (!reduce(expert, function(x,y) x$finished() || y$finished()) && reduce(expert, function(x,y) x$state()$wealth > 0 || y$state()$wealth > 0)) {
+for(i in seq_along(expert)){
+  expert[[i]]$rejectedHyp <- list()
+  expert[[i]]$pass <- 1
+}
+
+while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) && reduce(map(expert, function(x) x$state()$wealth > 0), function(x,y) x || y)) {
   bid = list(const = expert$const$bidder$bid(), geom = expert$geom$bidder$bid())
-  ifelse(bid$const > bid$geom, winner <- expert$const, winner <- expert$geom)
+
+  ifelse(bid$const > bid$geom, wstr <- "const", wstr <- "geom")
+
+  winner <- expert[[wstr]]
   index = winner$feature()
   maxBid <- max(unlist(bid))
+
+  #print(paste("index: ", index, "wealth const: ", expert$const$state()$wealth, "wealth geom: ", expert$geom$state()$wealth, "bid: ", maxBid, "p: ", pvals[min(unlist(index))]))
+
   winner$pay(maxBid)
 
-  print(paste("index: ", index, "wealth const: ", expert$const$state()$wealth, "wealth geom: ", expert$geom$state()$wealth, "bid: ", maxBid))
-
-  if (pvals[min(unlist(index))] < maxBid) {
+  if (pvals[index] < maxBid) {
     winner$passTest(omega)
-    rejectedHyp[[1+length(rejectedHyp)]] = index
+    winner$rejectedHyp[[1+length(winner$rejectedHyp)]] <- index
   }
-  if(winner$finishedPass()) {
+  if (winner$finishedPass()) {
     winner$udPass()
-    pass = pass+1
+    winner$pass <- winner$pass+1
   }
+  expert[[wstr]] <- winner
 }
-rejectedHyp; pass
-pvals[unlist(rejectedHyp)]
+
+for(i in seq_along(expert)){
+  print(paste(expert[[i]]$name,expert[[i]]$rejectedHyp, expert[[i]]$pass,pvals[unlist(expert[[i]]$rejectedHyp)]))
+}
 ```
 
 # Same Bidder
@@ -444,10 +455,10 @@ makeMultiExpertSC <- function(..., ncolumns, wealth=.05) {
   output
 }
 
-expertConst = partial(makeBidderConst, const=.1)
-expertGeom  = partial(makeBidderGeom,  frac=.1)
-expert = makeMultiExpert(expertConst, expertGeom, ncolumns=length(pvals), wealth=omega/2)
-names(expert) <- c("const","geom")
+expertConstSC = partial(makeBidderConst, const=.1)
+expertGeomSC  = partial(makeBidderGeom,  frac=.1)
+expertSC = makeMultiExpert(expertConstSC, expertGeomSC, ncolumns=length(pvals), wealth=omega/2)
+names(expertSC) <- c("const","geom")
 ```
 
 # Single wealth object
