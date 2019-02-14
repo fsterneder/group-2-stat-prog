@@ -387,8 +387,6 @@ There are many functional packages that provide partial function application but
 ## Example
 
 ```{r}
-library(purrr)
-
 seed = 421232
 set.seed(seed) 
 nNull = 20; nNonNull = 20
@@ -398,26 +396,36 @@ pvals = sample(c(nulls, nonNulls))
 
 omega = .1
 expertConst = partial(makeBidderConst, const=.1)
-expertGeom  = partial(makeBidderGeom, frac=.1)
+expertGeom  = partial(makeBidderGeom,  frac=.1)
 expert = makeMultiExpert(expertConst, expertGeom, ncolumns=length(pvals), wealth=omega/2)
+names(expert) <- c("const","geom")
 rejectedHyp = list()
 pass = 1
 
-#while (!expert$finished() && expert$state()$wealth > 0) {
-#  index = expert$feature()
-#  bid = expert$bidder$bid()
-#  expert$pay(bid)
-#  if (pvals[index] < bid) {
-#    expert$passTest(omega)
-#    rejectedHyp[[1+length(rejectedHyp)]] = index
-#  }
-#  if(expert$finishedPass()) {
-#    expert$udPass()
-#    pass = pass+1
-#  }
-#}
-#rejectedHyp; pass
-#pvals[unlist(rejectedHyp)]
+while (!reduce(expert, function(x,y) x$finished() || y$finished()) && reduce(expert, function(x,y) x$state()$wealth > 0 || y$state()$wealth > 0)) {
+  #index = list(const = expert$const$feature(), geom = expert$geom$feature())
+  bid = list(const = expert$const$bidder$bid(), geom = expert$geom$bidder$bid())
+
+  ifelse(bid$const > bid$geom, winner <- expert$const, winner <- expert$geom)
+
+  index = winner$feature()
+  maxBid <- max(unlist(bid))
+
+  winner$pay(maxBid)
+
+  print(paste("index: ", index, "\n", "wealth: ", winner$state()$wealth, "bid: ", maxBid))
+
+  if (pvals[min(unlist(index))] < maxBid) {
+    winner$passTest(omega)
+    rejectedHyp[[1+length(rejectedHyp)]] = index
+  }
+  if(winner$finishedPass()) {
+    winner$udPass()
+    pass = pass+1
+  }
+}
+rejectedHyp; pass
+pvals[unlist(rejectedHyp)]
 ```
 
 # Same Bidder

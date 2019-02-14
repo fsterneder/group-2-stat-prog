@@ -541,10 +541,14 @@ stargazer(age_team_perf_mod, align=T, type='html', style="all2")
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 If we believed in this model, we could argue, since there is a positive slope, that it would be advantageous for a team to field (exclusivly?) older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
 =======
 If we believe in this model than we could argue, since there is a positive slope, that it would be advantageous for a team to field older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
 >>>>>>> 36e60f7184ec27bebfcd338d98846ef9f60acd81
+=======
+If we believe in this model than we could argue, since there is a positive slope, that it would be advantageous for a team to field older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
+>>>>>>> a4703cb141a13aeb8c31e225b303239fbafa5e28
 =======
 If we believe in this model than we could argue, since there is a positive slope, that it would be advantageous for a team to field older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
 >>>>>>> a4703cb141a13aeb8c31e225b303239fbafa5e28
@@ -635,6 +639,7 @@ age_war_pit <- left_join(age_c_players, pit_2016 %>%
   summarise(G_all = sum(G_all), GS = sum(GS)) %>%
   ungroup()
 <<<<<<< HEAD
+<<<<<<< HEAD
 ```
 
 In regards to missing values, in the WAR data for position players we miss
@@ -645,6 +650,18 @@ In regards to missing values, in the WAR data for position players we miss
 age_war_pos <- age_war_pos %>% drop_na(weightedWAR)
 ```
 
+=======
+```
+
+In regards to missing values, in the WAR data for position players we miss
+`r dim(age_war_pos %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war_pos)[1]`. And for pitchers we miss
+`r dim(age_war_pit %>% filter(is.na(weightedWAR)))[1]` out of `r dim(age_war_pit)[1]`.
+
+```{r}
+age_war_pos <- age_war_pos %>% drop_na(weightedWAR)
+```
+
+>>>>>>> a4703cb141a13aeb8c31e225b303239fbafa5e28
 =======
 ```
 
