@@ -403,17 +403,13 @@ rejectedHyp = list()
 pass = 1
 
 while (!reduce(expert, function(x,y) x$finished() || y$finished()) && reduce(expert, function(x,y) x$state()$wealth > 0 || y$state()$wealth > 0)) {
-  #index = list(const = expert$const$feature(), geom = expert$geom$feature())
   bid = list(const = expert$const$bidder$bid(), geom = expert$geom$bidder$bid())
-
   ifelse(bid$const > bid$geom, winner <- expert$const, winner <- expert$geom)
-
   index = winner$feature()
   maxBid <- max(unlist(bid))
-
   winner$pay(maxBid)
 
-  print(paste("index: ", index, "\n", "wealth: ", winner$state()$wealth, "bid: ", maxBid))
+  print(paste("index: ", index, "wealth const: ", expert$const$state()$wealth, "wealth geom: ", expert$geom$state()$wealth, "bid: ", maxBid))
 
   if (pvals[min(unlist(index))] < maxBid) {
     winner$passTest(omega)
@@ -431,6 +427,25 @@ pvals[unlist(rejectedHyp)]
 # Same Bidder
 
 >  Suppose I start the two experts from part 4 with the same constructor object.  How does this set of experts behave compared to the ones in part 4?  How does this help you design bidding strategies?
+
+```{r}
+makeMultiExpertSC <- function(..., ncolumns, wealth=.05) {
+  sc <- makeRawSource(ncolumns)
+  output <- list()
+  for (i in seq_along(list(...))) {
+    output[[i]] <- makeExpert(
+      list(...)[[i]](wealth),
+      sc
+    )
+  }
+  output
+}
+
+expertConst = partial(makeBidderConst, const=.1)
+expertGeom  = partial(makeBidderGeom,  frac=.1)
+expert = makeMultiExpert(expertConst, expertGeom, ncolumns=length(pvals), wealth=omega/2)
+names(expert) <- c("const","geom")
+```
 
 # Single wealth object
 
