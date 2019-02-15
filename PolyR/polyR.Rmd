@@ -152,6 +152,11 @@ makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
 
 ## environmentDrawing
 
+```{r}
+include_graphics("envir.png")
+```
+
+
 # Comment the code
 
 > Comment the code thoroughly. After part 1, you should understand how the code works.  Now comment it to help explain it to others.  Essentially every line should be commented. Remember, you aren’t explaining what the code does,  eg,  for line 42,  “ifelse checks the condition, bids wealth*frac if it holds, otherwise wealth.” Instead, explain why things are done as they are, eg, “ifelse statement ensures termination by eventually bidding remaining wealth”. Note that some things are worth explaining a bit of the how. For example, line 95, “+1 accounts for the zero at the beginning of the activeColumns vector”.
