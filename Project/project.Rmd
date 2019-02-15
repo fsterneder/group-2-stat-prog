@@ -52,7 +52,7 @@ Most of our linear models focus on the year 2016 (although some analyses are wid
 There are four different sections, which will walk you through the baseball (2016) analysis: 
   
 
-Section 1 is concerened with handedness. More specifically, we ask whether the distribution of right-, left- and both-handed players has changed since the first season in 1871, and whether a player's expected WAR differs as a function of handedness (i.e., are there group differences?). 
+Section 1 is concerned with handedness. More specifically, we ask whether the distribution of right-, left- and both-handed players has changed since the first season in 1871, and whether a player's expected WAR differs as a function of handedness (i.e., are there group differences?). 
 
 In Section 2, we look at the distribution of age and how a team's average age could be connected to its success (measured by wins). We also look at the relationship between player age and expected WAR.  
 
@@ -198,9 +198,9 @@ war_pos_16 %>%
   arrange(desc(n)) %>% 
   filter(n > 1)
 ```  
-Now that we can be assured that ```war_pos_2016``` contains more than one WAR for 124 different players, we will have to figure out a way to deal with this later on. 
+Now that we can be assured that `war_pos_2016` contains more than one WAR for 124 different players, we will have to figure out a way to deal with this later on. 
 
-But first, we continue merging our data frames, until we have each players preferred batting and throwin hand as well as their WAR statistic(s) in a single data frame, namely `pos_2016` ("pos" for "position players").
+But first, we continue merging our data frames, until we have each players preferred batting and throwing hand as well as their WAR statistic(s) in a single data frame, namely `pos_2016` ("pos" for "position players").
 
 ```{r}
 #Get the bbrefID column
@@ -247,7 +247,7 @@ where $i$ refers to the $i$th player, and $k$ to the $k$th team he played for in
 The function `wghtWAR()` (see help.R file) implements the above equation. In order to apply `wghtWAR()` to each player, we need to nest WAR within players. The resulting variable, "weightedWAR", will be used as a response variable for our linear models.  
 
 ```{r warning=F}
-#Nest number of WAR-osbervations by players
+#Nest number of WAR-observations by players
 pos_2016 <- nest(pos_2016, c(G_all,teamID), key = "WAR")
 #Compute weighted WAR for each player
 pos_2016 <- pos_2016 %>% 
@@ -320,7 +320,7 @@ war_pit_16 <- warPit %>%
   filter(year_ID == 2016)
 
 
-# #Check if player_ID, team_ID ist key
+# #Check if player_ID, team_ID is key
 # war_pit_16 %>% 
 #   count(player_ID, team_ID) %>% 
 #   filter(n>1)
@@ -337,7 +337,7 @@ pit_2016 <- pit_2016 %>%
 
 Again, we nested "teams", "games played", and "WAR" within players and applied `wghtWAR()` to obtain a weighted average WAR for each player. 
 ```{r}
-#Nest number of WAR-osbervations by players
+#Nest number of WAR-observations by players
 pit_2016 <- nest(pit_2016, -playerID, -bats, -throws)
 #Compute weighted WAR for each player
 pit_2016 <- pit_2016 %>% 
@@ -840,7 +840,7 @@ sal_bb_stats_lg_range <-
   scale_color_manual(values = c("#446a8b", "#985c59")) +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
-  labs(x = "Year", y = "Range of salaries in mllion US$", 
+  labs(x = "Year", y = "Range of salaries in million US$", 
        title = "Range of baseball players' salaries by league")
 (sal_bb_stats_lg_range)
 ```
@@ -880,13 +880,13 @@ sal_bb_us_dev <- ggplot(data = sal_bb_us) +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   scale_x_continuous(breaks = sal_bb_us$yearID) +
   labs(x = "Year", y = "% rise in salary of baseballers and US citizens", 
-       title = "Salarydevelopment of baseballers and US citizens")
+       title = "Salary development of baseballers and US citizens")
 (sal_bb_us_dev)
 ```
   
 Starting at 1990 (because the US Salary data is not available for the years before), the average US wages increased about 25% until 2016, whereas the baseball players' salaries increased more than 85%. This is a huge difference. So, baseball probably became more popular or (at least) people wanted to spend more on the games and the teams. Another reason for the players getting more money would be that the teams got more money because of bigger sponsoring.
 
-##Mostpaying teams
+##Highest-paying teams
 We saw that both leagues paid more over time. Let's also take a look at the different teams. As we have data on at least 30 teams per year and the teams changed over time, we will only look at the most recent ones from 2016. We're going to find out the teams which paid the most for their players and look at their development. Also, we will make a linear model to see if the teams who pay more, also win more. 
 
 ###2016's Top 6 over time {.tabset .tabset-fade}
@@ -940,7 +940,7 @@ div(ggplotly(sal_mostp_teams_mean), align = "center")
   
 As the sum is not a perfect indicator, we also look at the mean salary per team. Here the development is similar, so it seems, that the sum spent or mean salary does not affect the analysis so much (at least with the Top 6)
   
-###Mostpaying teams and Win proportion {.tabset .tabset-fade}
+###Highest-paying teams and Win proportion {.tabset .tabset-fade}
 We also want to analyze if the teams paying *high salaries* for their players also win the most. We will take a look at the median salary, the maximum for one player per team and the sum spent per team. For the wins we will use the *Wins per Games* from the Age table. Getting this information to the salaries, does not cause any data loss, which is shown by the 0 rows in the anti-joins. 
 
 ```{r sal_teams_prep}
@@ -982,7 +982,7 @@ salaries16_teams_med <- safe_lm_own(salaries16_teams_games, "Wprop", "sal_median
 (salaries16_teams_med)
 ```
   
-The linear model shows, that the higher the median salary, the more games are won. But the residuals are very high, why one cannot trust this conclusion of correlataion between median salary and % Games won.   
+The linear model shows, that the higher the median salary, the more games are won. But the residuals are very high, why one cannot trust this conclusion of correlation between median salary and % Games won.   
 
   
 ####Maximum salary and Win proportion {-}
@@ -1018,8 +1018,8 @@ stargazer(sal_lm_t1, sal_lm_t2, sal_lm_t3, type = "html", align = T)
 <br>
 This is also shown in the summary above. The p-values are <0.01 with the sum and the proportion of the maximum salary, and they also have higher R². 
   
-##Mostpaid players
-We now saw the teams and their salaries. We also want to take a look at the players themselves. The rise in the salaries was mainly conducted by some high earninig players. Why do they get paid so much more than others? Are they better? To answer these questions we will look again at the latest data available from 2016 and find out the players with the largest salaries. Then we will make an analysis of this year to see if the ones gaining more also played better and vice versa. 
+##Highest-paid players
+We now saw the teams and their salaries. We also want to take a look at the players themselves. The rise in the salaries was mainly conducted by some high earning players. Why do they get paid so much more than others? Are they better? To answer these questions we will look again at the latest data available from 2016 and find out the players with the largest salaries. Then we will make an analysis of this year to see if the ones gaining more also played better and vice versa. 
 
 ###2016's Top 5 over time
 To get the Top 5 most paid players of 2016 and then look at their development we use the `Salaries` table. 
@@ -1105,7 +1105,7 @@ stargazer(sal_lm_p1, sal_lm_p2, type = "html", align = T)
   
 
 #Of Handedness, Age and Salaries 
-The last chapter looks at all the factors described above, and figures out the relation between age, salary and handedness and the baseball-player's success. The sucess of a baseball player is measured by the Wins Above Replacement (WAR). 
+The last chapter looks at all the factors described above, and figures out the relation between age, salary and handedness and the baseball-player's success. The success of a baseball player is measured by the Wins Above Replacement (WAR). 
 
 ##Linear Model {.tabset}
 For our final linear model we enter all of the variables above as covariates to predict a player's expected weighted WAR. Also, we include an interaction term for age and salary. The rationale behind this is that we suspect the strength of the relationship between salary and weighted WAR to vary as a function of age. More precisely, younger players who are under their first contract could be relatively important to their teams, however get paid relatively less as opposed to older players who are beyond their first contract. That is, we consider it reasonable to suspect that older, established players (beyond their first contract) are paid according to their actual performance, whereas younger players are paid according to their presumed potential. We also included handedness as a covariate, with a player's throwing hand as a proxy for "handedness". Also, we will only look at the weighted WAR for position players.
@@ -1190,7 +1190,7 @@ To visualize the linear trend fitted by our model, we plotted two separate regre
 
 ```{r}
 age_grid <- seq_range(df16$age, 10) #specify x values for the surface grid
-salary_grid <- seq_range(df16$salary, 10) #speciy y values for the surface grid
+salary_grid <- seq_range(df16$salary, 10) #specify y values for the surface grid
 
 #returns a matrix of fitted values for right-handed players
 fit_right <- outer(
