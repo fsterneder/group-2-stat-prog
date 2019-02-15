@@ -1,5 +1,5 @@
 ---
-title: "Baseball – Of Ages, Salaries and Handedness"
+title: "Baseball – Of Handedness, Age and Salaries"
 author: "Vilsmeier Johannes, Sterneder Florian, Schaub Andrea"
 date: "`r Sys.Date()`"
 output:
@@ -46,7 +46,7 @@ We downloaded Baseball Reference's "WAR for Position Players" (`warPos`) and "WA
 
 From other databases we use: 
   
-  * `Salaries_US` (from [OECD](https://data.oecd.org/earnwage/average-wages.htm#indicator-chart))
+  * `Salaries_US` (from [OECD](https://data.oecd.org/earnwage/average-wages.htm#indicator-chart)): Average US-wages from 1990-2017. Unfortunately, more accurate data for the wages than the average was not found. Be careful with interpreting the data, as with wages, the mean and the median differ a lot. 
   
   
 Most of our linear models focus on the year 2016 (although some analyses are wider). This year was chosen because it shows the latest data available on all three main aspects: Handedness, age and salaries. 
@@ -62,7 +62,7 @@ Section 3 is all about player salaries. How did player salaries change over year
 
 Finally, in section 4 we use handedness, age, and salary, to build a linear model for expected WAR, given these covariates. 
 
-#Of Handedness and Baseball  
+#Of Handedness  
 
 ##Proportions of Batting and Throwing Hands Since 1871 
 
@@ -284,7 +284,7 @@ model_bats_pos <- lm(weightedWAR~bats, data = pos_2016)
 ```{r results = "asis"}
 stargazer(model_bats_pos, type = "html", align = T)
 ```
-
+<br>
 
 The scatter plot for throwing hand:
 ```{r}
@@ -370,7 +370,7 @@ model_bats_pit <- lm(weightedWAR~bats, data = pit_2016)
 ```{r results = "asis"}
 stargazer(model_bats_pit, align = T, type = "html")
 ``` 
-
+<br><br>
 The scatter plot for WAR by throwing hand:
 ```{r}
 #raw data for throwing hand
@@ -394,10 +394,10 @@ model_throws_pit <- lm(weightedWAR~throws, data = pit_2016)
 stargazer(model_throws_pit, align = T, type = "html")
 ``` 
 
-# Of Age and Baseball
+#Of Age
 This chapter analyzes the age of baseball players, focusing on the season of 2016. First the average age is computed, then differences between the teams and their average players age are analyzed. At the end of this chapter, we will build a model which tries to answer the questions "How old is a good baseball player?" or "Do they get better with age?".
 
-## Age of the average active baseball player in 2016
+##Age of the average active baseball player in 2016
 
 ```{r}
 age_calc <- function(from,to=now()) difftime(to, from)/dyears(1)
@@ -430,7 +430,7 @@ Funfact: As we might be able to tell from the graph, the oldest player in the se
 
 Now we know more about the average active player in `r age_current`. Let's go further.
 
-## Differences in the age distribution per team
+##Differences in the age distribution per team
 
 ```{r}
 names(color$team_main) <- sort(unique(age_c_players$teamID))
@@ -462,7 +462,7 @@ age_c_players %>%
 ```
 As we see, the IQR and Median isn't _that_ different between the teams. Maybe we can work out larger differences in the next question.
 
-## Weighted average team age
+##Weighted average team age
 
 The idea is to weight the playing time of each player and therefore see if teams rather put their faith in younger players or value experience. The formula we use to weigh each time is $$ \text{age}_p \frac{\text{games played}_p}{\frac{1}{n}\sum^n_{i=1}\text{games played}_i} $$
 
@@ -492,9 +492,9 @@ age_c_team %>%
 
 As we can can see, there are some differences if we weight the playing time, but most noticeable is that the shift is clearly toward more experienced players. To be exact, according to this new metric the average team is now `r signif(age_c_team %>% summarise(mean(weightByG-meanAge)),4)` years older which adds up to `r signif(age_c_team %>% summarise(sum(weightByG-meanAge)),4)` years in total for the whole league.
 
-## Games Won and Average Team Age 
+##Games Won and Average Team Age 
 
-### Season 2016
+###Season 2016
 
 With the information we got so far we build a linear model to see if there is a connection between the percentage of games won by a team and their weighted average age. The model looks like this:
 
@@ -515,10 +515,10 @@ age_c_team %>%
 ```{r results = "asis"}
 stargazer(age_team_perf_mod, align=T, type='html', style="all2")
 ```
-
+<br>
 If we believed in this model, we could argue, since there is a positive slope, that it would be advantageous for a team to field older players. But although this model looks promising, it might suffer from a rather small sample size ($N=30$). In the next step we are going to expand our sample by looking at the data from the season 1985 to 2016.
 
-### Season 1985 - 2016
+###Season 1985 - 2016
 ```{r}
 age_from = 1985
 age_f_players <- 
@@ -565,7 +565,7 @@ age_f_team %>%
 ```{r results = "asis"}
 stargazer(age_team_perf_mod, align=T, type='html', style="all2")
 ```
-
+<br>
 We find that we can see a similar trend in the extended dataset, only the slope is a bit flatter. But now we can say with a bit more confidence that teams with a higher average team age win more games than teams with younger players over the course of a season. 
 
 How would a local regression model look? Let's see.
@@ -588,7 +588,7 @@ A $R^2$ value of only 10% might not look too strong, it could still be argued th
 
 Now that we looked at teams, how about individual players? Can we find the same trend that more experienced players show better performance statistics?
 
-## Player Age and Wins Above Replacement
+##Player Age and Wins Above Replacement
 
 As the performance indicator we again use Wins Above Replacement, which according to [FanGraphs](https://library.fangraphs.com/misc/war/) is _[...] all-inclusive and provides a useful reference point for comparing players._
 
@@ -630,7 +630,7 @@ age_war_pos %>%
 ```{r results = "asis"}
 stargazer(age_war_pos_mod, align=T, type='html')
 ```
-
+<br>
 There seems to be no connection between WAR for position players and age. How about pitchers?
 
 ```{r}
@@ -648,7 +648,7 @@ age_war_pit %>%
 ```{r results = "asis"}
 stargazer(age_war_pit_mod, align=T, type='html')
 ```
-
+<br>
 There seems to be no connection between these variables for pitchers either.
 
 What if we combine the WAR for both position players and pitchers?
@@ -684,16 +684,14 @@ stargazer(age_war_combo_mod, align=T, type='html')
 
 No connection here either.
 
-# Of Salaries and Baseball
+#Of Salaries
 After looking at the average age of baseball players, we take a look at what they earn. Is it more/less depending on the league? How is the salary development compared to the average US-salary? After answering these questions, the mostpaying teams in 2016 and mostpaid players in the 2000s and 2016 are also listed. The main questions, if a team that spends much on their players, wins more, and if a good baseball player also gets paid high, are asked at the end. 
 
-###Adjusting the statistics
-Before starting the analysis, we have to prepare our data. For the salaries, we have the table `Salaries` containing all baseball-players' salaries from 1989-2016 and for the comparison to US-salaries we have the table `Salaries_US` containing the average wages from 1990-2017. In both tables, we look at the (average) million US$ earned per year. 
+####Adjusting the statistics {-}
+Before starting the analysis, we have to prepare our data. In both tables, we look at the (average) million US$ earned per year and calculate some other statistical values per year (if available).
+```{r salaries_adjust}
+#Adjusting US-Salaries data
 
-####US-Salaries
-The statistics for the average wage in the US came from the OECD (https://data.oecd.org/earnwage/average-wages.htm#indicator-chart). Unfortunately, we didn't find more accurate data for the wages than the average. Be careful with interpreting the data, as with wages, the mean and the median differ a lot. 
-Within the data preparation some columns were dropped, and the average development in percent was calculated. 
-```{r salaries_us_adjust}
 #renaming the columns
 colnames(Salaries_US) = c("country", "indicator", "subject", "currency", "frequency", "yearID", "av_wage_US", "Flag_codes")
 Salaries_US <- Salaries_US %>%
@@ -704,14 +702,11 @@ Salaries_US <- Salaries_US %>%
     #wages converted into million US$
     av_wage_US = av_wage_US/1000000,
     #calculating average development
-    av_wage_perc = ((av_wage_US/lag(av_wage_US) - 1) * 100),
+    #  not needed: av_wage_perc = ((av_wage_US/lag(av_wage_US) - 1) * 100),
     av_wage_100perc = ((av_wage_US-min(av_wage_US))/max(av_wage_US))*100)
 (Salaries_US)
-```
-  
-####Baseball-Salaries
-With the baseball salaries, some statistical values, like mean, max, min and median were calculated. Also the average development of the mean salary was computed to compare it to the US salaries. `sal_bb_stats` contains the statistics for each year. 
-```{r salaries_adjust}
+
+#Adjusting Salaries (baseball) data
 Salaries <- Salaries %>%
   #converting into million US$
   mutate(salary = salary/1000000)
@@ -729,12 +724,12 @@ sal_bb_stats
 #for the US-salary comparison, years from 1990 on are filtered
 sal_bb_stats_90 <- sal_bb_stats %>%
   filter(yearID >= 1990) %>%
-  mutate(salary_mean_perc = ((salary_mean/lag(salary_mean) - 1) * 100),
+  mutate(#  not needed: salary_mean_perc = ((salary_mean/lag(salary_mean) - 1) * 100),
          salary_mean_100perc = ((salary_mean-min(salary_mean))/max(salary_mean))*100) 
 ```
   
 ##Overview
-To get to know the data, a boxplot is made. It shows the median salary, and the first and third quantile. There are a lot of outliers, especially in the 2000's. The mean salary is also shown. In 2000 there was a leap in the median salary, and in and after 2009, the highest salaries so far were payed. We're going to take a look at those afterwards. 
+To get to know the data, a boxplot is made. It shows the median salary, and the first and third quantile. 
 ```{r salaries_statistics, cache = T}
 summary(Salaries)
 #boxplot with the player salaries
@@ -748,10 +743,24 @@ sal_boxplot <- ggplot() +
 (sal_boxplot)
 ```
   
+There are a lot of outliers, especially in the 2000's. The blue line shows the mean salary. We can see that in 1991 the mean and median salary started to diverge. In 2000 there was a leap in the median salary, and in and after 2009, the highest salaries so far were payed. 
+  
 ###About missing data
+To find out about missing data, the number of teams and players was analyzed. Explicitly missing data is not stored in the tables we have, but we will check if there is implicitly missing data. 
+```{r salaries_missing_data_teams}
+#graph with number of teams per year
+sal_bb_nbteams <- ggplot(data = sal_bb_stats, mapping = aes(x = yearID, y = n_teams)) + 
+  geom_line(color = "#3068A1") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
+  scale_x_continuous(breaks = Salaries$yearID) +
+  labs(x = "Year", y = "Number of teams", 
+       title = "Number of Teams with salary information each year")
+div(ggplotly(sal_bb_nbteams), align = "center")
+```
+  
+In 1989 we have 26 teams with salary information, rising to 28 in 1993 and then after 1998 there are 30 teams. Looking at the [development of baseball teams](https://en.wikipedia.org/wiki/Timeline_of_Major_League_Baseball) it seems, that there is no implicitly missing data, as the number of teams rose similarly.   
 
-To find out about missing data, the number of players and teams was analyzed. Explicitly missing data is not stored in the tables we have, but there seems to be implicitly missing data. The number of players spikes a lot through the years, and there are also players, who got paid by more than one team a year, which can be seen in the difference between the number of players and the distinct number of players per year. As this analysis is about average salaries, we will keep all the data, because whether somebody was paid twice or once does not matter. They played more, so they earned more. For the analysis of the players, these will be dropped, but this will be explained later on. 
-```{r salaries_missing_data, cache = T}
+``` {r salaries_missing_data_players}
 #preparing the graph with number of players per year
   #gathering the data to make to lines with 1 variable
 sal_bb_nbplayers <- sal_bb_stats %>%
@@ -771,19 +780,13 @@ ggplotly(sal_bb_nbplayers) %>%
   #editing the legend to be beneath
   layout(legend = list(orientation = "h", x = 0, y = -0.3)) %>%
   div(align = "center")
-
-#graph with number of teams per year
-sal_bb_nbteams <- ggplot(data = sal_bb_stats, mapping = aes(x = yearID, y = n_teams)) + 
-  geom_line(color = "#3068A1") + 
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
-  scale_x_continuous(breaks = Salaries$yearID) +
-  labs(x = "Year", y = "Number of teams", 
-       title = "Number of Teams with salary information each year")
-div(ggplotly(sal_bb_nbteams), align = "center")
 ```
-
+  
+The number of players spikes a lot through the years, which indicates implicitly missing data. A comparison to other data on the [number of players](https://www.statista.com/statistics/639334/major-league-baseball-players-on-opering-day-rosters/) shows that in 2013 there were 856 players, where we only have salary information for 814 baseball players. 
+There are also players, who got paid by more than one team a year, which can be seen in the difference between the number of players and the distinct number of players per year. We will keep all these players by now, as this is about average salaries. Whether somebody was paid twice or once does not matter - they played more, so they earned more. (For the analysis of the players, these will be dropped, but this will be explained later on.)  
+  
 ##Salaries within the leagues 
-We've seen the overall salaries, let's focus on the differences within the leagues. We have 2 leagues within the salaries data, the National League (NL) and the American League (AL). In the scatterplot we see, that the differences between the average salary and maximum salary grow with time in both leagues, so this this effect is not caused by one league paying highly more. But there are differences within the leagues: The maximum gaining players of the AL earn more money than the ones from the NL (except for 2015 and 2016). 
+We've seen the overall salaries, let's focus on the differences within the leagues. We have 2 leagues within the salaries data, the National League (NL) and the American League (AL). 
 ```{r salaries_lg}
 #computing the stats for leagues 
 sal_bb_stats_lg <- Salaries %>%
@@ -808,8 +811,10 @@ sal_lg <-
 (sal_lg)
 ```
   
+In the scatterplot we see, that the differences between the average salary and maximum salary grow with time in both leagues, so this this effect is not caused by one league paying highly more. But there are differences within the leagues: The maximum gaining players of the AL earn more money than the ones from the NL (except for 2015 and 2016).   
+  
 ###Mean, median and range {.tabset .tabset-fade}
-Let's also take a look at the mean and median salaries. Over the average salaries, the AL also pays more. Looking at range, which tells us about the gap between the minimum and maximum salary of the players, we can see, that it was increasing over time. Also, until 2014 the AL range was higher, then it dropped, whereas the NL range continued to rise.   
+Let's also take a look at the mean and median salaries, as well as the range.  
 
 ####Mean and median salary {-}
 ```{r salaries_lg_mean, out.height = '130%'}
@@ -821,11 +826,13 @@ sal_bb_stats_lg_all <- sal_bb_stats_lg %>%
   scale_color_manual(values=c("#446a8b", "#985c59")) +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
   scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
-  labs(x = "Year", y ="Salary (median, mean) in million US$",
+  labs(x = "Year", y ="Salary (mean, median) in million US$",
        title = "Median and mean salary per year and league")
 stat_type_names <- c(salary_lg_median = "Median Salary", salary_lg_mean = "Mean Salary")
 (sal_bb_stats_lg_all)+facet_wrap(vars(statistics_type), nrow=2, labeller = as_labeller(stat_type_names))
 ```
+  
+Over the average salaries, both leagues rose alike. Although in 2005 the AL started to pay more than the NL. But the NL followed up and in 2015 the NL even had a higher median salary. The graph shows again, that the mean salary rose to 4-5 million US\$, whereas the median salary increased only to 1-2 million US\$. (Difference of 3-4 million US\$ when looking at mean or median!)
   
 ####Range of salaries {-}
 ``` {r salaries_lg_range}
@@ -835,16 +842,17 @@ sal_bb_stats_lg_range <-
   geom_line(mapping = aes(x = yearID, y = salary_lg_max-salary_lg_min)) +
   scale_color_manual(values=c("#446a8b", "#985c59")) +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5)) +
-  scale_x_continuous(breaks = sal_bb_stats_lg$yearID, labels = scales::comma) +
+  scale_x_continuous(breaks = sal_bb_stats_lg$yearID) +
   labs(x = "Year", y = "Range of salaries in mllion US$", 
        title = "Range of baseball players' salaries by league")
 (sal_bb_stats_lg_range)
 ```
-
-##Compared to US-salaries {.tabset .tabset-fade}
-The average baseball salaries increased a lot with time. Let's compare it to the average US salaries and see if they rose alike. 
-We can see, that the average salary of baseball players is a lot higher. To see the differences more, we compare the percentage rise over time. Starting at 1990 (because the US Salary data is not available for the years before), the average US wages increased about 25% until 2016, whereas the baseball players' salaries increased more than 85%. This is a huge difference. So, baseball probably became more popular or at least, people want to spend more on the games and the teams, the teams might have more money because of bigger sponsoring and so on. 
   
+Looking at range, which tells us about the gap between the minimum and maximum salary of the players, we can see, that it was increasing over time. Also, until 2014 the AL range was higher, then it dropped, whereas the NL range continued to rise.    
+  
+##Compared to US-salaries {.tabset .tabset-fade}
+The average baseball salaries increased a lot with time. Let's compare it to the average US salaries and see if they rose alike. You can choose between the absolute comparison or the percentage change over time. 
+
 ###Comparison to US-salaries absolute {-}
 ```{r salaries_comparison_us1} 
 sal_bb_us <- left_join(sal_bb_stats_90, Salaries_US, by = "yearID")
@@ -863,6 +871,8 @@ sal_bb_us_av <-
 (sal_bb_us_av)
 ```
   
+We can see, that the average salary of baseball players is a lot higher. To see the differences in the development more, we compare the percentage rise over time.   
+  
 ###Comparison in percentage rise {-}
 ```{r salaries_comparison_us2} 
 sal_bb_us_dev <- ggplot(data = sal_bb_us) + 
@@ -876,14 +886,14 @@ sal_bb_us_dev <- ggplot(data = sal_bb_us) +
        title = "Salarydevelopment of baseballers and US citizens")
 (sal_bb_us_dev)
 ```
+  
+Starting at 1990 (because the US Salary data is not available for the years before), the average US wages increased about 25% until 2016, whereas the baseball players' salaries increased more than 85%. This is a huge difference. So, baseball probably became more popular or (at least) people wanted to spend more on the games and the teams. Another reason for the players getting more money would be that the teams got more money because of bigger sponsoring.
 
 ##Mostpaying teams
-We saw that both leagues paid more over time. Let's also take a look at the different teams. As we have data on at least 30 teams per year and they changed over time, we will only look at the most recent ones from 2016. We're going to find out the teams which paid the most for their players and look at their development. Also, we will make a linear model to see if teams who pay more, also win more. 
+We saw that both leagues paid more over time. Let's also take a look at the different teams. As we have data on at least 30 teams per year and the teams changed over time, we will only look at the most recent ones from 2016. We're going to find out the teams which paid the most for their players and look at their development. Also, we will make a linear model to see if the teams who pay more, also win more. 
 
 ###2016's Top 6 over time {.tabset .tabset-fade}
-The Top 6 is defined by the mean salary per player or the sum paid per team. We started with defining the Top 5, but then found out, that SFN and TEX were both number 5, one when looking at the mean, the other with the sum. Therefore a Top 6 was chosen, because both the sum and the average have their advantages and disadvantages to find out the mostpaying teams (the sum is affected by the number of observations we have for each team, whereas the average can be shortened by having more information on little earning players).
-
-BOS, DET, LAN, NYA SFN, and TEX spent the most money on their players in 2016. Looking at their development, the NYA paid a lot more since 2002. LAN had a big rise in 2013, and TEX had less money between 2004 and 2010. As we know, that the number of players with salary information is not constant, changes in the salary sum can be due to the changing number of players. Looking at the mean gives us similar conclusions. 
+The Top 6 is defined by the mean salary per player and the sum paid per team. The analysis started with defining the Top 5, but it turned out, that the San Francisco Giants (SFN) and Texas Rangers (TEX) were both number 5, one when looking at the mean, the other with the sum. Therefore a Top 6 was chosen, because both the sum and the average have their advantages and disadvantages (the sum is affected by the number of observations we have for each team, whereas the average can be decreased by having more information on little earning players).
 
 ```{r}
 #getting the top5 most spending teams
@@ -915,6 +925,8 @@ sal_mostp_teams_sum <-
 div(ggplotly(sal_mostp_teams_sum), align = "center")
 ```
   
+The Boston Red Sox (BOS), Detroit Tigers (DET), Los Angeles Dodgers (LAN), New York Yankees (NYA), San Francisco Giants, and  Texas Rangers spent the most money on their players in 2016. Looking at their development, the NYA paid a lot more since 2002. LAN had a big rise in 2013, and TEX had less money between 2004 and 2010. As we know, that the number of players with salary information is not constant, changes in the salary sum can be due to the changing number of players. 
+  
 ####Average salary paid per team {-}
 ```{r}
 #plotting the average salary
@@ -929,8 +941,10 @@ sal_mostp_teams_mean <-
 div(ggplotly(sal_mostp_teams_mean), align = "center")
 ```
   
+As the sum is not a perfect indicator, we also look at the mean salary per team. Here the development is similar, so it seems, that the sum spent or mean salary does not affect the analysis so much (at least with the Top 6)
+  
 ###Mostpaying teams and Win proportion {.tabset .tabset-fade}
-We also want to analyze if the teams paying *high salaries* for their players also win the most. We will take a look at the median salary, the maximum for one player per team and the sum spent per team. For the wins we will use the *Wins per Games* from the Age table. The tables are joined together by an `inner_join`, to only keep the records with data on teams and wins per games. We have full data on both sides, which is shown by the 0 rows in the anti-joins. 
+We also want to analyze if the teams paying *high salaries* for their players also win the most. We will take a look at the median salary, the maximum for one player per team and the sum spent per team. For the wins we will use the *Wins per Games* from the Age table. Getting this information to the salaries, does not cause any data loss, which is shown by the 0 rows in the anti-joins. 
 
 ```{r sal_teams_prep}
 salaries16_teams <- Salaries %>%
@@ -959,43 +973,64 @@ salaries16_teams_games
            "teamID"))
 ```
   
-Now we can construct the linear model with our formula (from help.R). We look at the median, maximum and sum spent. 
+Now we can construct the linear model with our formula (from help.R). Using the safely version, we do not get any errors.  
+We look at the median, maximum and sum spent. 
   
 ####Median salary and Win proportion {-}
+
+$\widehat{\text{Wins%}}_i = \hat{\beta_0} + \hat{\beta_1} \text{Median Salary per Team}_i$ 
 ```{r sal_teams_wprop_med}
 #linear model for the median salary per team
-salaries16_teams_med <- lm_own(salaries16_teams_games, "Wprop", "sal_median", 
-                               "% Games won", "Median player's salary in million US$ per team", "Linear model of the % Games won \n
-                               and median salary per team")
+salaries16_teams_med <- safe_lm_own(salaries16_teams_games, "Wprop", "sal_median", 
+                               "% Games won", "Median player's salary in million US$ per team", 
+                               "Linear model of the % Games won \nand median salary per team")
 (salaries16_teams_med)
 ```
   
+The linear model shows, that the higher the median salary, the more games are won. But the residuals are very high, why one cannot trust this conclusion of correlataion between median salary and % Games won.   
+
+  
 ####Maximum salary and Win proportion {-}
+$\widehat{\text{Wins%}}_i = \hat{\beta_0} + \hat{\beta_1} \text{Proportion of the Maximum Salary per Team}_i$
 ```{r sal_teams_wprop_max}
 #linear model for the maximum salary per team 
-salaries16_teams_max_prop <- lm_own(salaries16_teams_games, "Wprop", "sal_max_prop", 
-                                    "% Games won", "Proportion of Maximum player's salary in million US$ per team", "Linear model of the % Games won \n
-                                    and proportion of maximum salary per team")
+salaries16_teams_max_prop <- safe_lm_own(salaries16_teams_games, "Wprop", "sal_max_prop", 
+                                    "% Games won", "Proportion of Maximum player's salary", 
+                                    "Linear model of the % Games won \nand proportion of maximum salary per team")
 (salaries16_teams_max_prop)
 ```
   
+The proportion of maximum salary is the $\frac{\text{Maximum salary}}{\text{Sum of Salaries}} \text{per Team}$. The linear model shows us, that one player with a much higher salary than the others, does not correlate with the team winning more. It is even better, to have the salaries more even, to win more. (Or teams win more, when having salaries even.)
+  
 ####Sum of salaries and Win proportion {-}
+$\widehat{\text{Wins%}}_i = \hat{\beta_0} + \hat{\beta_1} \text{Sum of Salaries per Team}_i$
 ```{r sal_teams_wprop_sum}
 #linear model for the sum of salaries paid per team 
-salaries16_teams_sum <- lm_own(salaries16_teams_games, "Wprop", "sal_sum", 
-                               "% Games won", "Money spent on players in million US$ per team", "Linear model of the % Games won \n
-                               and Money spent on players per team")
+salaries16_teams_sum <- safe_lm_own(salaries16_teams_games, "Wprop", "sal_sum", 
+                               "% Games won", "Money spent on players in million US$ per team", 
+                               "Linear model of the % Games won \nand Money spent on players per team")
 (salaries16_teams_sum)
 ```
+  
+The sum of money spent on players per team is correlating with the %Games won. The more money a team spends, the more games are won (or the more games are won, the more money is spent).
+  
+###\ {-}
+So the conclusion of these models is, that there is a relation between the money spent and the games won, at least when looking at the sum and the proportion of the maximum salary. 
+```{r results = "asis"}
+sal_lm_t1 <- lm(Wprop~sal_median, data = salaries16_teams_games)
+sal_lm_t2 <- lm(Wprop~sal_max_prop, data = salaries16_teams_games)
+sal_lm_t3 <- lm(Wprop~sal_sum, data = salaries16_teams_games)
+
+stargazer(sal_lm_t1, sal_lm_t2, sal_lm_t3, type = "html", align = T)
+```
+<br>
+This is also shown in the summary above. The p-values are <0.01 with the sum and the proportion of the maximum salary, and they also have higher R². 
   
 ##Mostpaid players
 We now saw the teams and their salaries. We also want to take a look at the players themselves. The rise in the salaries was mainly conducted by some high earninig players. Why do they get paid so much more than others? Are they better? To answer these questions we will look again at the latest data available from 2016 and find out the players with the largest salaries. Then we will make an analysis of this year to see if the ones gaining more also played better and vice versa. 
 
 ###2016's Top 5 over time
-
-To get the most paid players of 2016 and then look at their development we use the `Salaries` table. 
-
-Kershcl01, most earning in 2015 and 2016, had a shorter career (like Priceda01) comparing to the others. Priceda01 had the highest salary to start with. The other players have been playing in Major League Baseball for at least 10 years before getting paid more than 25 million US\$.  
+To get the Top 5 most paid players of 2016 and then look at their development we use the `Salaries` table. 
 
 ```{r sal16_most_players}
 #getting players for only 2016, players with more than one salary will be excluded
@@ -1032,11 +1067,12 @@ sal_mostp_pl_in16_plot <- ggplot(data = sal_mostp_pl_in16, mapping = aes(x = yea
 (sal_mostp_pl_in16_plot)
 ```
   
+Kershcl01, most earning in 2015 and 2016, had a shorter career (like Priceda01) comparing to the others. Priceda01 had the highest salary to start with. The other players have been playing in Major League Baseball for at least 10 years before getting paid more than 25 million US\$. 
+  
 ###High paid players and Wins Above Replacement {.tabset .tabset-fade}
-
 To find out about the relationship of salary and being a good player, we'll construct a linear model. We will compare the players' salaries to the Wins above replacement for position players and for pitching (WARpos and WARpit). 
 
-Before constructing the model, we need to prep our data. We make two tables, one containing WARpos and the other WARpit. We use an inner join to keep the rows with data on both salary and war, and use an anti-join to see what data we've lost. We loose 39 salary statistics and 541 players with WAR. 
+Before constructing the model, we need to prep our data. We make two tables, one containing WARpos and the other WARpit. We loose for position players: `r nrow(anti_join(salaries16, pos_2016, "playerID"))` salary statistics and `r nrow(anti_join(pos_2016, salaries16, "playerID"))` players with WAR. We loose for pitching: `r nrow(anti_join(salaries16, pit_2016, "playerID"))` salary statistics and `r nrow(anti_join(pit_2016, salaries16, "playerID"))` players with WAR. 
 
 ```{r salaries16_prep}
 #using an inner join to only hold the rows with WAR and salary
@@ -1051,30 +1087,34 @@ salaries16_pl_warPit <- inner_join(salaries16, pit_2016, "playerID")
 ```
   
 ####WAR for position players and salary {-}
+$\widehat{\text{weighted WAR pos}}_i = \hat{\beta_0} + \hat{\beta_1} \text{Salary per Player}_i$ 
 ```{r lm_salary_war_pos}
-lm_salary_warpos <- lm_own(salaries16_pl_warPos, "weightedWAR", "salary",
+lm_salary_warpos <- safe_lm_own(salaries16_pl_warPos, "weightedWAR", "salary",
                            "Wins above replacement (pos. players)", "Salary in million US$", 
-                           "Linear model on Wins above Replacement for position players \n
-                           and the player's salary")
+                           "Linear model on Wins above Replacement for position players \nand the player's salary")
 (lm_salary_warpos)
 ```
   
+The salary and wins above replacement indicator for position players are not really related. There seems to be a slightly positive correlation, with more salary meaning higher WAR (or vice versa). But there are a lot of observations with little salary and a lot with WAR around 0. 
+  
 ####WAR for pitching and salary {-}
+$\widehat{\text{weighted WAR pit}}_i = \hat{\beta_0} + \hat{\beta_1} \text{Salary per Player}_i$ 
 ```{r lm_salary_war_pit}
-lm_salary_warpit <- lm_own(salaries16_pl_warPit, "weightedWAR", "salary",
+lm_salary_warpit <- safe_lm_own(salaries16_pl_warPit, "weightedWAR", "salary",
                            "Wins above replacement (pitching)", "Salary in million US$", 
-                           "Linear model on Wins above Replacement for pitching \n
-                           and the player's salary")
+                           "Linear model on Wins above Replacement for pitching \nand the player's salary")
 (lm_salary_warpit)
 ```
+  
+For pitching, the Wins above replacement indicator and the salary show less correlation than the linear model with WAR for position players. Here we can see again, that there are a lot observations around 0 spread on both axes. 
 
 ```{r results = "asis"}
-lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary)
-stargazer(lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary))
-lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary)
-stargazer(lm(data = salaries16_pl_warPit, formula = weightedWAR ~ salary,
-          type = "HTML"))
+sal_lm_p1 <- lm(weightedWAR~salary, data = salaries16_pl_warPos)
+sal_lm_p2 <- lm(weightedWAR~salary, data = salaries16_pl_warPit)
+
+stargazer(sal_lm_p1, sal_lm_p2, type = "html", align = T)
 ```
+  
 
 #Of Handedness, Age and Salaries 
 The last chapter looks at all the factors described above, and figures out the relation between age, salary and handedness and the baseball-player's success. The sucess of a baseball player is measured by the Wins Above Replacement (WAR). 
@@ -1109,7 +1149,7 @@ $$
 ```{r results = "asis"}
 stargazer(finalModel, align = T , type="html") #display summary statistics
 ```  
-<br><br> 
+<br> 
 
 Unsurprisingly (and in light of the previous linear models) our final model does not "explain" the data very well ($R^2$ < .06).   
 
