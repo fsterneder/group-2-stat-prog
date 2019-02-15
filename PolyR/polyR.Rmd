@@ -479,7 +479,7 @@ There are many functional packages that provide partial function application but
 
 ```{r}
 # Bidder Constant
-expertConst = partial(makeBidderConst, const=.1)
+expertConst = partial(makeBidderConst, const=.05)
 # Bidder Geom
 expertGeom  = partial(makeBidderGeom,  frac=.1)
 expert = makeMultiExpert(expertConst, expertGeom, ncolumns=length(pvals), wealth=omega/2)
@@ -492,7 +492,9 @@ for(i in seq_along(expert)){
   expert[[i]]$pass <- 1
 }
 
-while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) && reduce(map(expert, function(x) x$state()$wealth > 0), function(x,y) x || y)) {
+while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) 
+       && reduce(map(expert, function(x) x$state()$wealth > 0), function(x,y) x || y)) 
+  {
   bid = list(const = expert$const$bidder$bid(), geom = expert$geom$bidder$bid())
 
   ifelse(bid$const > bid$geom, wstr <- "const", wstr <- "geom")
@@ -500,8 +502,6 @@ while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) && r
   winner <- expert[[wstr]]
   index = winner$feature()
   maxBid <- max(unlist(bid))
-
-  #print(paste("index: ", index, "wealth const: ", expert$const$state()$wealth, "wealth geom: ", expert$geom$state()$wealth, "bid: ", maxBid, "p: ", pvals[min(unlist(index))]))
 
   winner$pay(maxBid)
 
@@ -514,6 +514,8 @@ while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) && r
     winner$pass <- winner$pass+1
   }
   expert[[wstr]] <- winner
+  
+  #print(paste("winner:", wstr , "index:", index, "wealth const:", expert$const$state()$wealth, "wealth geom: ", expert$geom$state()$wealth, "bid: ", maxBid, "p: ", pvals[min(unlist(index))]))
 }
 
 for(i in seq_along(expert)){
