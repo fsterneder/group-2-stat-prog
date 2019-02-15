@@ -477,7 +477,7 @@ There are many functional packages that provide partial function application but
 
 ## Example
 
-There are still a few choices to make. We can decide if we want to terminate the condition if one expert is finished or keep on going. We decided on the latter. We also tried to keep it as general as possible, i.e. to be able to use more than two experts. In two parts we decided against in for the sake of clarity. _(see comments in code)_
+There are still a few choices to make. We can decide if we want to terminate the condition if one expert is finished or keep on going. We decided on the latter. We also tried to keep it as general as possible, i.e. to be able to use more than two experts. In two parts we decided against in for the sake of clarity. _(see comment in code)_
 
 ```{r}
 expertConst = partial(makeBidderConst, const=.05)
@@ -515,14 +515,12 @@ while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y)
   }
   expert[[wstr]] <- winner
   
-  debug <- paste("winner:", wstr , "index:", index, "wealth const:", expert$const$state()$wealth, "wealth geom: ", expert$geom$state()$wealth, "bid: ", maxBid, "p: ", pvals[min(unlist(index))])
+  #print(paste("winner:", wstr , "index:", index, "wealth const:", expert$const$state()$wealth, "wealth geom: ", expert$geom$state()$wealth, "bid: ", maxBid, "p: ", pvals[min(unlist(index))]))
 }
 
 for(i in seq_along(expert)){
   print(paste(expert[[i]]$name,expert[[i]]$rejectedHyp, expert[[i]]$pass,pvals[unlist(expert[[i]]$rejectedHyp)]))
 }
-
-head(debug)
 ```
 
 # Same Bidder
@@ -612,7 +610,7 @@ makeMultiExpertSW <- function(..., ncolumns) {
 
 # wealth here
 wealth = omega/2
-expertConstSW = makeBidderConstSW(const=.01)
+expertConstSW = makeBidderConstSW(const=.05)
 expertGeomSW  = makeBidderGeomSW(frac=.1)
 
 expertSW = makeMultiExpertSW(expertConstSW, expertGeomSW, ncolumns=length(pvals))
@@ -647,12 +645,10 @@ while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) && w
   }
   expertSW[[wstr]] <- winner
 
-  debug <- paste("winner:",wstr ,"index:", index, "wealth:", wealth, "bid:", maxBid, "p:", pvals[min(unlist(index))])
+  #print(paste("winner:",wstr ,"index:", index, "wealth:", wealth, "bid:", maxBid, "p:", pvals[min(unlist(index))]))
 }
 
 for(i in seq_along(expertSW)){
   print(paste(expertSW[[i]]$name,expertSW[[i]]$rejectedHyp, expertSW[[i]]$pass,pvals[unlist(expertSW[[i]]$rejectedHyp)]))
 }
-
-head(debug)
 ```
