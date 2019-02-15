@@ -111,3 +111,4 @@ safe_lm_own <- safely(lm_own)
 predictSurface <- function(x1, x2, model) {
   predict(model, data.frame(age=x1, salary=x2))
 }
+
