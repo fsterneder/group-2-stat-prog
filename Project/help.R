@@ -5,8 +5,6 @@ library(modelr)
 library(stargazer)
 library(plotly)
 library(htmltools)
-library(styler)
-library(lintr)
 
 #### helper functions ####
 

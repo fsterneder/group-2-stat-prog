@@ -1335,11 +1335,16 @@ df16 <- df16 %>%
   ylab("Residuals"))+
   geom_ref_line(h = 0)
 ```
-The scatter plots for age/salary/age-by-salary and the residuals look nothing like random noise. It is most likely that there is a pattern in the data that was not captured by our model. 
+The scatter plots for age/salary/age-by-salary and the residuals look nothing like random noise. It is most likely that there is a pattern in the data that was not captured by our model.  
+
+#Concluding Remarks   
+In this project we analyzed data from Sean Lahman's baseball datbase. We looked at changes in hand preference over time, and the association between hand preference and player performance (as measured by relative value; WAR). Then we considered the association between age, and both, team and individual performance. Also, we looked at changes in player salaries and associations between salary and team/individual performance. Finally we looked at the association between hand preference, age and player salary with respect to individual performance.  
+We conclude that the distributions of players' preferred batting and throwing hands have not really changed since 1871, and that handedness does not predict individual performance. Our linear models indicate that teams that spent more on player salary, were also more successful. Also, teams that were, on average, older seem to have performed better (as measured by wins), however, player performance did not seem to differ as a function of age, or salary. A suspected interaction between age and salary also did not turn out to be predictive of individual performance. 
 
 #Appended Code
   
 ```{r}
+#This code can be used to visualize a three-way interaction between handedness, age, and salary with respect to weighted WAR. Separate linear models for each batting and throwing group are computed.
 # threeD <- function(df){
 #   models <- list()
 #   models <- list(
