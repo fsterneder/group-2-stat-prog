@@ -7,7 +7,6 @@ library(stargazer)
 library(plotly)
 library(htmltools)
 library(shiny)
-library(styler)
 
 #### helper functions ####
 

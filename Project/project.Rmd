@@ -22,8 +22,6 @@ opts_chunk$set(echo = TRUE,
                strip.white = TRUE,
                warning = FALSE,
                messages = FALSE,
-               tidy = "styler",
-               tidy = FALSE,
                fig.align = "center")
 theme_set(theme_light())
 options(warn=-1)
