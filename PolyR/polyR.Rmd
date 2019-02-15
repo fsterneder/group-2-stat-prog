@@ -168,8 +168,12 @@ makeBidderGeom = function(wealth=.05, frac = .5) {
         frac   = frac
       ) 
     },
+    #these functions change the (initial) wealth of the parent environment
+    #bidAccepted increases the wealth
     bidAccepted = function(a) { wealth <<- wealth + a },
+    #bidRejected decreases the wealth
     bidRejected = function(d) { wealth <<- wealth - d },
+    #at the end, the bidfunction is called, which either returns the wealth, or the wealth*frac
     bid = function()  { ifelse(wealth > .0001, wealth*frac, wealth) }
   )
 }
@@ -183,8 +187,12 @@ makeBidderConst = function(wealth=.05, const=.01) {
         const   = const
       ) 
     },
+    #these functions change the (initial) wealth of the parent environment
+    #bidAccepted increases the wealth
     bidAccepted = function(a) { wealth <<- wealth + a },
+    #bidRejected decreases the wealth
     bidRejected = function(d) { wealth <<- wealth - d },
+    #at the end, the bidfunction is called, which either returns the wealth, or the const
     bid = function()  { ifelse(wealth >= const, const, wealth) }  
   )
 }
@@ -195,11 +203,15 @@ makeRawSource <- function(ncolumns) {
 
 #every column is stored as an active column (WHY DOES IT START WITH 0?)
   activeColumns  = 0:ncolumns
+  #a positions variable is made for ??
+  #position will be changed in generateFeature-function
   position       = ncolumns
+  #the previous position is NA at the beginning (will be changed with following generateFeature-function))
   prevPosition   = NA
   nactive        = ncolumns
   
   list(
+    #creating a name variable
     name = "Marginal",
     #first function:
     state = function() {
@@ -239,34 +251,50 @@ makeExpert <- function (bidder, constructor) {
 #this function takes two variables, a bidder and a constructor. They have to be given. 
 #it creates a list, containing the name ("Geom"), the bidder, constructor and 8 functions. 
   list(
+    #creating a name variable
     name         = "Geom",
+    #bidder is the given bidder (in our case: makeBidderGeom or makeBidderConst)
     bidder       = bidder,
+    #constructor is the given constructor (in our case: makeRawSource)
     constructor  = constructor,
+    
     #Function 1:
     state        = function() { 
       list(
+        #takes the wealth from the bidder
         wealth   = bidder$state()$wealth,
+        #takes the position from the constructor
         position = constructor$state()$position
       )
     },
     #Function 2:
+    #calls the bid function from (in our case) makeBidder(Geom/Const)
+    # --> what is changed?
     bid          = function() { bidder$bid() },
     #Function 3:
+    #calls the generateFeature function from (in our case) makeRawSource
+    # --> what is changed?
     feature      = function() { constructor$generateFeature() },
     #Function 4:
+    #checks the position in state of makeRawSource, T if 0, else --> F
     finishedPass = function() { constructor$state()$position == 0 },
     #Function 5:
+    #checks the nactive in state of makeRawSource, T if 0, else --> F
     finished     = function() { constructor$state()$nactive == 0 },
     #Function 6:
+    #takes an argument a
     passTest     = function(a) {
+      #calls the bidAccepted function to increase the wealth
       bidder$bidAccepted(a)
+      #calls the dropLastFeature 
       constructor$dropLastFeature() 
     },
     #Function 7:
-    pay          = function(payment) {
-      bidder$bidRejected(payment)
-    },
+    #takes argument payment, makeBidder-bidRejected function with payment
+    #wealth is decreased by payment
+    pay          = function(payment) {bidder$bidRejected(payment) },
     #Function 8:
+    #changes position and prevPosition
     udPass       = function() { constructor$udPass() }
   )
 }
@@ -284,6 +312,7 @@ makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
   )
 }
 
+#setting example data
 seed = 421232
 set.seed(seed) 
 nNull = 20; nNonNull = 20
@@ -292,10 +321,14 @@ nonNulls = runif(nNonNull, 0, .05)
 pvals = sample(c(nulls, nonNulls)) 
 
 omega = .1
+#making an expert, with ncolumns = length(pvals), wealth and frac
 expert = makeExpertGeom(length(pvals), wealth=omega, frac=.1)
+#making an empty list for the rejectedHyp
 rejectedHyp = list()
+#setting pass to 1
 pass = 1
 
+#run as long as ... 
 while (!expert$finished() && expert$state()$wealth > 0) {
   index = expert$feature()
   bid = expert$bidder$bid()
