@@ -214,18 +214,18 @@ makeBidderConst = function(wealth=.05, const=.01) {
 
 # Constructor which takes ncolumns (length of all possible tests) as input
 makeRawSource <- function(ncolumns) {
-  # vector of positions we could test and a safety zero position
+  # Vector of positions we could test and a safety zero position
   activeColumns  = 0:ncolumns
-  # current position of the test
+  # Current position of the test
   position       = ncolumns
-  # previous position of the test
+  # Previous position of the test
   prevPosition   = NA
-  # number of remaining tests
+  # Number of remaining tests
   nactive        = ncolumns
   
   # function outputs a list
   list(
-    # name
+    # Name
     name = "Marginal",
     # Stores various position parameters (see question 3)
     state = function() {
@@ -245,9 +245,9 @@ makeRawSource <- function(ncolumns) {
     generateFeature = function() {
       # Updates previous with output prevPosition
       prevPosition  <<- position
-      # moves position from current down to the next position (non NA) 
+      # Moves position from current down to the next position (non NA) 
       position      <<- max(activeColumns[activeColumns < position], na.rm=T)
-      # outputs current Position
+      # Outputs current Position
       return(prevPosition) 
     },
     # Function to keep track of the non-rejected values (called when hypothesis is rejected)
@@ -265,21 +265,21 @@ makeRawSource <- function(ncolumns) {
   )
 }
 
-#makeExpert takes the bidder and the constructor and coordinates the two. Both have to be given. 
+# MakeExpert takes the bidder and the constructor and coordinates the two. Both have to be given. 
 makeExpert <- function (bidder, constructor) {
   
-#it creates a list, containing the name ("Geom"), the bidder, constructor and 8 functions. 
+# It creates a list, containing the name ("Geom"), the bidder, constructor and 8 functions. 
   
   list(
-    #creating a name variable
+    # Creating a name variable
     name         = "Geom",
-    #bidder is the given bidder (in our case: makeBidderGeom or makeBidderConst)
+    # Bidder is the given bidder (in our case: makeBidderGeom or makeBidderConst)
     bidder       = bidder,
-    #constructor is the given constructor (in our case: makeRawSource)
+    # Constructor is the given constructor (in our case: makeRawSource)
     constructor  = constructor,
     
-    #keeps track of current wealth and position. Wealth is taken 
-    #the bidder, while the current position is taken from the constructor. 
+    # Keeps track of current wealth and position. Wealth is taken 
+    # The bidder, while the current position is taken from the constructor. 
     state        = function() { 
       list(
         #takes the wealth from the bidder
@@ -289,109 +289,109 @@ makeExpert <- function (bidder, constructor) {
       )
     },
     
-    #calls the bid function from (in our case) makeBidder(Geom/Const)
-    #bid creates a "shortcut" to the bid function of bidder. We can thus call 
-    #bid right away without having to call bidder first
+    # Calls the bid function from (in our case) makeBidder(Geom/Const)
+    # bid creates a "shortcut" to the bid function of bidder. We can thus call 
+    # bid right away without having to call bidder first
     bid          = function() { bidder$bid() },
     
-    #Shortcut to the generateFeature function from (in our case) makeRawSource
+    # Shortcut to the generateFeature function from (in our case) makeRawSource
     feature      = function() { constructor$generateFeature() },
     
-    #checks if position in state of makeRawSource is 0. Needed later as a 
-    #condition for udPass 
+    # checks if position in state of makeRawSource is 0. Needed later as a 
+    # condition for udPass 
     finishedPass = function() { constructor$state()$position == 0 },
     
-    #checks if nactive is 0. If True algorithm is terminated
+    # checks if nactive is 0. If True algorithm is terminated
     finished     = function() { constructor$state()$nactive == 0 },
     
-    #Shortcut to bidAccepted and dropLastFeature. If pvalue is rejected,
-    #algorithm will skip it in further iterations.
+    # Shortcut to bidAccepted and dropLastFeature. If pvalue is rejected,
+    # algorithm will skip it in further iterations.
     passTest     = function(a) {
-      #calls the bidAccepted function to increase the wealth
+      # calls the bidAccepted function to increase the wealth
       bidder$bidAccepted(a)
-      #calls the dropLastFeature 
+      # calls the dropLastFeature 
       constructor$dropLastFeature() 
     },
     
-    #Reduce wealth by bid amount. Shortcut.
+    # Reduce wealth by bid amount. Shortcut.
     pay          = function(payment) {bidder$bidRejected(payment) },
     
     
-    #Shortcut. If current position is 0 the algorithm restarts at the 
-    #non-rejected pvalue with the highest index. 
+    # Shortcut. If current position is 0 the algorithm restarts at the 
+    # non-rejected pvalue with the highest index. 
     udPass       = function() { constructor$udPass() }
   )
 }
 
-#Shortcut to makeExpert.
+# Shortcut to makeExpert.
 makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
-#this function takes the number of columns, and optional the wealth and frac. 
-#it calls the makeExpert function above, with 
+# this function takes the number of columns, and optional the wealth and frac. 
+# it calls the makeExpert function above, with 
   makeExpert(
-  #bidder being the bidder made by the makeBidderGeom function. 
-  #The input values for wealth and frac are passed
+  # bidder being the bidder made by the makeBidderGeom function. 
+  # The input values for wealth and frac are passed
     makeBidderGeom(wealth, frac),
-  #constructor is made by the makeRawSource function. 
-  #The input value of ncolumns is passed on. 
+  # constructor is made by the makeRawSource function. 
+  # The input value of ncolumns is passed on. 
     makeRawSource(ncolumns)
   )
 }
 
-#setting example data
-#make experiment repeatable
+# setting example data
+# make experiment repeatable
 seed = 421232 
 set.seed(seed) 
 
-#Defines number of hypotheses tested
+# Defines number of hypotheses tested
 nNull = 20; nNonNull = 20
 
-#vector of (pseudo)randomly generated values between 0 and 1. 
-#Null hypothesis is true
+# vector of (pseudo)randomly generated values between 0 and 1. 
+# Null hypothesis is true
 nulls = runif(nNull)
 
-#vector of (pseudo)randomly generated values between 0 and .05. 
-#Null hypothesis false
+# vector of (pseudo)randomly generated values between 0 and .05. 
+# Null hypothesis false
 nonNulls = runif(nNonNull, 0, .05)
 
-#Permutate pvalues
+# Permutate pvalues
 pvals = sample(c(nulls, nonNulls)) 
 
-#Set wealth, called "omega"
+# Set wealth, called "omega"
 omega = .1
 
-#making an expert, with ncolumns = length(pvals), wealth and frac
-#expert is assigned makeExpertGeom() object.
+# making an expert, with ncolumns = length(pvals), wealth and frac
+# expert is assigned makeExpertGeom() object.
 expert = makeExpertGeom(length(pvals), wealth=omega, frac=.1)
 
-#making an empty list for the rejectedHyp
-#Updates everytime hypothesis is rejected.
+# making an empty list for the rejectedHyp
+# Updates everytime hypothesis is rejected.
 rejectedHyp = list()
 
-#setting pass to 1
-#Updates as algorithm cylces through pvalues.
+# setting pass to 1
+# Updates as algorithm cylces through pvalues.
 pass = 1
 
-#algorithm continues as long as there are remaining hypotheses to test and
-#wealth is not depleted
+# algorithm continues as long as there are remaining hypotheses to test and
+# wealth is not depleted
 while (!expert$finished() && expert$state()$wealth > 0) {
-  #Index of current hypothesis test
+  # Index of current hypothesis test
   index = expert$feature()
-  #returns current bid
+  # Returns current bid
   bid = expert$bidder$bid()
-  #decreases wealth by amount of bid
+  # Decreases wealth by amount of bid
   expert$pay(bid)
-  #Tests if hypothesis can be rejected
+  # Tests if hypothesis can be rejected
   if (pvals[index] < bid) {
-    #adjusts wealth by omega
+    # Adjusts wealth by omega
     expert$passTest(omega)
-    #adds index of rejected hypothesis to list rejectedHyp as a list element
+    # Adds index of rejected hypothesis to list rejectedHyp as a list element
     rejectedHyp[[1+length(rejectedHyp)]] = index
   }
-  #Checks if there are remaining tests
+  # Checks if there are remaining tests
   if(expert$finishedPass()) {
-    #resets position from 0 to highest index in the contructor
+    # Resets position from 0 to highest index in the contructor
     expert$udPass()
-    #tracks number of current iteration.
+    # Tracks number of current iteration.
     pass = pass+1
   }
 }
@@ -427,7 +427,7 @@ setn = 5
 testA <- makeBidderGeom()
 # Without function
 testB <- makeBidderGeomNoFun()
-#Returns list of outputs. 
+# Returns list of outputs. 
 state <- 
   function() {
     list(
@@ -477,14 +477,13 @@ There are many functional packages that provide partial function application but
 
 ## Example
 
+There are still a few choices to make. We can decide if we want to terminate the condition if one expert is finished or keep on going. We decided on the latter. We also tried to keep it as general as possible, i.e. to be able to use more than two experts. In two parts we decided against in for the sake of clarity. _(see comments in code)_
+
 ```{r}
-# Bidder Constant
 expertConst = partial(makeBidderConst, const=.05)
-# Bidder Geom
 expertGeom  = partial(makeBidderGeom,  frac=.1)
 expert = makeMultiExpert(expertConst, expertGeom, ncolumns=length(pvals), wealth=omega/2)
 names(expert) <- c("const","geom")
-#To have consistent expert names
 expert$const$name = "Const"
 
 for(i in seq_along(expert)){
@@ -495,8 +494,9 @@ for(i in seq_along(expert)){
 while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) 
        && reduce(map(expert, function(x) x$state()$wealth > 0), function(x,y) x || y)) 
   {
-  bid = list(const = expert$const$bidder$bid(), geom = expert$geom$bidder$bid())
 
+  # 2 lines below only work for two experts
+  bid = list(const = expert$const$bidder$bid(), geom = expert$geom$bidder$bid())
   ifelse(bid$const > bid$geom, wstr <- "const", wstr <- "geom")
 
   winner <- expert[[wstr]]
@@ -515,12 +515,14 @@ while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y)
   }
   expert[[wstr]] <- winner
   
-  #print(paste("winner:", wstr , "index:", index, "wealth const:", expert$const$state()$wealth, "wealth geom: ", expert$geom$state()$wealth, "bid: ", maxBid, "p: ", pvals[min(unlist(index))]))
+  debug <- paste("winner:", wstr , "index:", index, "wealth const:", expert$const$state()$wealth, "wealth geom: ", expert$geom$state()$wealth, "bid: ", maxBid, "p: ", pvals[min(unlist(index))])
 }
 
 for(i in seq_along(expert)){
   print(paste(expert[[i]]$name,expert[[i]]$rejectedHyp, expert[[i]]$pass,pvals[unlist(expert[[i]]$rejectedHyp)]))
 }
+
+head(debug)
 ```
 
 # Same Bidder
@@ -550,28 +552,30 @@ names(expertSC) <- c("const","geom")
 
 > Make  both  experts  from  the  part  d  use  a  single  wealth  object.   This will require you to create a separate wealth object that is passed to both of the bidders, and modify the bidder objects to change the wealth object appropriately.
 
+What we essentially did was take every function, get rid of the wealth in the state and rely on a wealth value in the global environment. 
+
 ```{r}
+# no more wealth in state
 makeBidderGeomSW = function(frac = .5) {
   list( 
     state = function() { list(frac = frac) },
     bidAccepted = function(a) { wealth <<- wealth + a },
     bidRejected = function(d) { wealth <<- wealth - d },
     bid = function()  { ifelse(wealth > .0001, wealth*frac, wealth) }
-    # ifelse statement ensures termination by eventually bidding remaining wealth
   )
 }
 
-# this bidder always bids a constant amount given by const
+# no more wealth in state
 makeBidderConstSW = function(const=.01) {
   list( 
     state = function() { list(const = const) },
     bidAccepted = function(a) { wealth <<- wealth + a },
     bidRejected = function(d) { wealth <<- wealth - d },
     bid = function()  { ifelse(wealth >= const, const, wealth) }  
-    # can't bid more than current wealth
   )
 }
 
+# no more wealth in state
 makeExpertSW <- function (bidder, constructor) {
   list(
     name         = "Geom",
@@ -593,6 +597,8 @@ makeExpertSW <- function (bidder, constructor) {
   )
 }
 
+# partial function application is not necessary anymore
+# we can simply pass the initalized function to our function
 makeMultiExpertSW <- function(..., ncolumns) {
   output <- list()
   for (i in seq_along(list(...))) {
@@ -604,6 +610,7 @@ makeMultiExpertSW <- function(..., ncolumns) {
   output
 }
 
+# wealth here
 wealth = omega/2
 expertConstSW = makeBidderConstSW(const=.01)
 expertGeomSW  = makeBidderGeomSW(frac=.1)
@@ -617,6 +624,7 @@ for(i in seq_along(expertSW)){
   expertSW[[i]]$pass <- 1
 }
 
+# adjusted control flow
 while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) && wealth > 0) {
   bid = list(const = expertSW$const$bidder$bid(), geom = expertSW$geom$bidder$bid())
 
@@ -626,7 +634,6 @@ while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) && w
   index = winner$feature()
   maxBid <- max(unlist(bid))
 
-  #print(paste("winner:",wstr ,"index:", index, "wealth:", wealth, "bid:", maxBid, "p:", pvals[min(unlist(index))]))
 
   winner$pay(maxBid)
 
@@ -639,9 +646,13 @@ while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) && w
     winner$pass <- winner$pass+1
   }
   expertSW[[wstr]] <- winner
+
+  debug <- paste("winner:",wstr ,"index:", index, "wealth:", wealth, "bid:", maxBid, "p:", pvals[min(unlist(index))])
 }
 
 for(i in seq_along(expertSW)){
   print(paste(expertSW[[i]]$name,expertSW[[i]]$rejectedHyp, expertSW[[i]]$pass,pvals[unlist(expertSW[[i]]$rejectedHyp)]))
 }
+
+head(debug)
 ```
