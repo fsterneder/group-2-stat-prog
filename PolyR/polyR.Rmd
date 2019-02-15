@@ -14,7 +14,6 @@ output:
     toc_float: yes
     fig_width: 7
     fig_height: 4.5
-subtitle: Programming in Statistics - Project
 ---
 
 ```{r setup, include=FALSE}
@@ -434,7 +433,7 @@ while (!reduce(map(expert, function(x) x$finished()), function(x,y) x || y) && r
 }
 
 for(i in seq_along(expert)){
-  #print(paste(expert[[i]]$name,expert[[i]]$rejectedHyp, expert[[i]]$pass,pvals[unlist(expert[[i]]$rejectedHyp)]))
+  print(paste(expert[[i]]$name,expert[[i]]$rejectedHyp, expert[[i]]$pass,pvals[unlist(expert[[i]]$rejectedHyp)]))
 }
 ```
 
