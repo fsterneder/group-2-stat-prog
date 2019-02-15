@@ -979,7 +979,7 @@ $\widehat{\text{Wins%}}_i = \hat{\beta_0} + \hat{\beta_1} \text{Median Salary pe
 ```{r sal_teams_wprop_med}
 #linear model for the median salary per team
 salaries16_teams_med <- safe_lm_own(salaries16_teams_games, "Wprop", "sal_median", "% Games won", "Median player's salary in million US$ per team", "Linear model of the % Games won \nand median salary per team")
-(salaries16_teams_med)
+(salaries16_teams_med)$result
 ```
   
 The linear model shows, that the higher the median salary, the more games are won. But the residuals are very high, why one cannot trust this conclusion of correlation between median salary and % Games won.   
@@ -990,7 +990,7 @@ $\widehat{\text{Wins%}}_i = \hat{\beta_0} + \hat{\beta_1} \text{Proportion of th
 ```{r sal_teams_wprop_max}
 #linear model for the maximum salary per team 
 salaries16_teams_max_prop <- safe_lm_own(salaries16_teams_games, "Wprop", "sal_max_prop", "% Games won", "Proportion of Maximum player's salary", "Linear model of the % Games won \nand proportion of maximum salary per team")
-(salaries16_teams_max_prop)
+(salaries16_teams_max_prop)$result
 ```
   
 The proportion of maximum salary is the $\frac{\text{Maximum salary}}{\text{Sum of Salaries}} \text{per Team}$. The linear model shows us, that one player with a much higher salary than the others, does not correlate with the team winning more. It is even better, to have the salaries more even, to win more. (Or teams win more, when having salaries even.)
@@ -1001,7 +1001,7 @@ $\widehat{\text{Wins%}}_i = \hat{\beta_0} + \hat{\beta_1} \text{Sum of Salaries 
 #linear model for the sum of salaries paid per team 
 salaries16_teams_sum <- safe_lm_own(salaries16_teams_games, "Wprop", "sal_sum", 
                                     "% Games won", "Money spent on players in million US$ per team", "Linear model of the % Games won \nand Money spent on players per team")
-(salaries16_teams_sum)
+(salaries16_teams_sum)$result
 ```
   
 The sum of money spent on players per team is correlating with the %Games won. The more money a team spends, the more games are won (or the more games are won, the more money is spent).
@@ -1082,7 +1082,7 @@ salaries16_pl_warPit <- inner_join(salaries16, pit_2016, "playerID")
 $\widehat{\text{weighted WAR pos}}_i = \hat{\beta_0} + \hat{\beta_1} \text{Salary per Player}_i$ 
 ```{r lm_salary_war_pos}
 lm_salary_warpos <- safe_lm_own(salaries16_pl_warPos, "weightedWAR", "salary", "Wins above replacement (pos. players)", "Salary in million US$", "Linear model on Wins above Replacement for position players \nand the player's salary")
-(lm_salary_warpos)
+(lm_salary_warpos)$result
 ```
   
 The salary and wins above replacement indicator for position players are not really related. There seems to be a slightly positive correlation, with more salary meaning higher WAR (or vice versa). But there are a lot of observations with little salary and a lot with WAR around 0. 
@@ -1091,7 +1091,7 @@ The salary and wins above replacement indicator for position players are not rea
 $\widehat{\text{weighted WAR pit}}_i = \hat{\beta_0} + \hat{\beta_1} \text{Salary per Player}_i$ 
 ```{r lm_salary_war_pit}
 lm_salary_warpit <- safe_lm_own(salaries16_pl_warPit, "weightedWAR", "salary", "Wins above replacement (pitching)", "Salary in million US$", "Linear model on Wins above Replacement for pitching \nand the player's salary")
-(lm_salary_warpit)
+(lm_salary_warpit)$result
 ```
   
 For pitching, the Wins above replacement indicator and the salary show less correlation than the linear model with WAR for position players. Here we can see again, that there are a lot observations around 0 spread on both axes. 
