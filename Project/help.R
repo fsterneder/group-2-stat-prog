@@ -1,3 +1,4 @@
+library(knitr)
 library(tidyverse)
 library(lubridate)
 library(zeallot)
@@ -5,6 +6,8 @@ library(modelr)
 library(stargazer)
 library(plotly)
 library(htmltools)
+library(shiny)
+library(styler)
 
 #### helper functions ####
 

@@ -15,16 +15,16 @@ subtitle: Programming in Statistics - Project
 ---
 Creative Commons Attribution-ShareAlike 3.0 Unported License
 ```{r hide=T, warning=F, message=F}
-library(knitr)
-library(shiny)
+source("help.R")
 opts_chunk$set(echo = TRUE,
                collapse = TRUE,
                comment = "",
                strip.white = TRUE,
                warning = FALSE,
                messages = FALSE,
+               tidy = "styler",
+               tidy = FALSE,
                fig.align = "center")
-source("help.R")
 theme_set(theme_light())
 options(warn=-1)
 ```  
