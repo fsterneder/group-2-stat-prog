@@ -76,7 +76,7 @@ makeBidderConst = function(wealth=.05, const=.01) {
 
 ## makeRawSource
 
-This constructor handles the positions 
+This constructor handles the position of the hypotheses and coordinates where the test is conducted.
 
 ```{r eval=F}
 makeRawSource <- function(ncolumns) {
@@ -111,6 +111,8 @@ makeRawSource <- function(ncolumns) {
 
 ## makeExpert
 
+Takes a bidder and a constructor as input and outputs a list which is used to additionally handle the bidding and other important functions for the hypothesis testing.
+
 ```{r eval=F}
 makeExpert <- function (bidder, constructor) {
   list(
@@ -141,6 +143,8 @@ makeExpert <- function (bidder, constructor) {
 
 ## makeExpertGeom
 
+Takes `ncolumns` as mandatory input and outputs a new expert.
+
 ```{r eval=F}
 makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
   makeExpert(
@@ -157,91 +161,100 @@ makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
 > Comment the code thoroughly. After part 1, you should understand how the code works.  Now comment it to help explain it to others.  Essentially every line should be commented. Remember, you aren’t explaining what the code does,  eg,  for line 42,  “ifelse checks the condition, bids wealth*frac if it holds, otherwise wealth.” Instead, explain why things are done as they are, eg, “ifelse statement ensures termination by eventually bidding remaining wealth”. Note that some things are worth explaining a bit of the how. For example, line 95, “+1 accounts for the zero at the beginning of the activeColumns vector”.
 
 ```{r results="hide"}
+# Creates a bidder with a geometric bidding strategy, therefore a fractional input can be specified. Also the wealth of the bidder is stored here..
 makeBidderGeom = function(wealth=.05, frac = .5) {
-#input of function has default values. If wealth and/or frac are not given, these values are used. 
-#list contains: list with state (saving input wealth, and frac as a list)
-#and 3 functions 
+  # Function outputs a list
   list( 
+    # Stores the wealth and frac in a function (see question 3)
     state = function() { 
+      # state outputs a list
       list(
+        # outputs the (updated) wealth value of the makeBidder env
         wealth = wealth,
+        # outputs the (updated) frac value of the makeBidder env
         frac   = frac
       ) 
     },
-    #these functions change the (initial) wealth of the parent environment
-    #bidAccepted increases the wealth
+    # When a bid was accepted it takes the value of the bid and increments wealth by this value
     bidAccepted = function(a) { wealth <<- wealth + a },
-    #bidRejected decreases the wealth
+    # Opposite of the function above (decreases the wealth)
     bidRejected = function(d) { wealth <<- wealth - d },
-    #at the end, the bidfunction is called, which either returns the wealth, or the wealth*frac
+    # Consitutes the bidding strategy of the bidder, ensures eventual termination of the hypothesis test
     bid = function()  { ifelse(wealth > .0001, wealth*frac, wealth) }
   )
 }
 
+# Creates a bidder with a constant bidding strategy
 makeBidderConst = function(wealth=.05, const=.01) {
-#this function has again default values. It is the same as the one before, only the bid-function differs. 
+  # Function outputs a list
   list( 
+    # Stores the wealth and frac in a function (see question 3)
     state = function() { 
+      # state outputs a list
       list(
+        # outputs the (updated) wealth value of the makeBidder env
         wealth  = wealth,
+        # outputs the (updated) frac value of the makeBidder env
         const   = const
       ) 
     },
-    #these functions change the (initial) wealth of the parent environment
-    #bidAccepted increases the wealth
+    # When a bid was accepted it takes the value of the bid and increments wealth (value of makeBidder env) by this value
     bidAccepted = function(a) { wealth <<- wealth + a },
-    #bidRejected decreases the wealth
+    # Opposite of the function above (decreases the wealth)
     bidRejected = function(d) { wealth <<- wealth - d },
-    #at the end, the bidfunction is called, which either returns the wealth, or the const
+    # Consitutes the bidding strategy of the bidder, ensures eventual termination of the hypothesis test
     bid = function()  { ifelse(wealth >= const, const, wealth) }  
   )
 }
 
+# Constructor which takes ncolumns (length of all possible tests) as input
 makeRawSource <- function(ncolumns) {
-#this function has one input variable, the number of columns.
-#It creates 4 variables and a list (containing the variable name and 4 functions, see comments there)
-
-#every column is stored as an active column (WHY DOES IT START WITH 0?)
+  # vector of positions we could test and a safety zero position
   activeColumns  = 0:ncolumns
-  #a positions variable is made for ??
-  #position will be changed in generateFeature-function
+  # current position of the test
   position       = ncolumns
-  #the previous position is NA at the beginning (will be changed with following generateFeature-function))
+  # previous position of the test
   prevPosition   = NA
+  # number of remaining tests
   nactive        = ncolumns
   
+  # function outputs a list
   list(
-    #creating a name variable
+    # name
     name = "Marginal",
-    #first function:
+    # Stores various position parameters (see question 3)
     state = function() {
+      # Function outputs a list
       list(
-      #the list stores the variables like before, except the nactive changes.
-      #the importance of this list and function creating it will be explained in "Why a list?"
+        # Current position of the test
         position     = position, 
+        # Previous position of the test
         prevPosition = prevPosition,
+        # Vector of positions we could test and a safety zero position
         active       = activeColumns,
-        #the first active column is dropped, then the sum (checking for NAs before) is computed
+        # Number of remaining tests
         nactive      = sum(!is.na(activeColumns[-1]))
       )
     },
-    #second function:
+    # Ouputs currents position and updates the position
     generateFeature = function() {
-    #here the positions are changed. With <<- we change the prevPosition and position variable in the parent environment
+      # Updates previous with output prevPosition
       prevPosition  <<- position
+      # moves position from current down to the next position (non NA) 
       position      <<- max(activeColumns[activeColumns < position], na.rm=T)
+      # outputs current Position
       return(prevPosition) 
     },
-    #third function:
+    # Function to keep track of the non-rejected values (called when hypothesis is rejected)
     dropLastFeature = function() { 
-    #this adds another column at the end, making it NA? (if generateFeature is done before)
+      # Decrement the activeColumns
       activeColumns[prevPosition+1] <<- NA 
       },
-    #fourth function:
+    # Resets the position values after a passed test
     udPass = function() {
-    #new position is the last column (with highest (index) number)
+      # 
       position <<- max(activeColumns, na.rm=T)
-      #prevPosition gets NA, to avoid errors if you forget to change it when doing a new round?
+      # Resets prevPosition
       prevPosition <<- NA
     }
   )
