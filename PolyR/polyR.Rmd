@@ -163,7 +163,7 @@ include_graphics("envir.png")
 
 # Comment the code
 
-> Comment the code thoroughly. After part 1, you should understand how the code works.  Now comment it to help explain it to others.  Essentially every line should be commented. Remember, you aren’t explaining what the code does,  eg,  for line 42,  “ifelse checks the condition, bids wealth*frac if it holds, otherwise wealth.” Instead, explain why things are done as they are, eg, “ifelse statement ensures termination by eventually bidding remaining wealth”. Note that some things are worth explaining a bit of the how. For example, line 95, “+1 accounts for the zero at the beginning of the activeColumns vector”.
+> Comment the code thoroughly. After part 1, you should understand how the code works.  Now comment it to help explain it to others.  Essentially every line should be commented. Remember, you are not explaining what the code does,  e.g.,  for line 42,  “ifelse checks the condition, bids wealth*frac if it holds, otherwise wealth.” Instead, explain why things are done as they are, e.g., “ifelse statement ensures termination by eventually bidding remaining wealth”. Note that some things are worth explaining a bit of the how. For example, line 95, “+1 accounts for the zero at the beginning of the activeColumns vector”.
 
 ```{r results="hide"}
 # Creates a bidder with a geometric bidding strategy, therefore a fractional input can be specified. Also the wealth of the bidder is stored here..
@@ -207,7 +207,7 @@ makeBidderConst = function(wealth=.05, const=.01) {
     bidAccepted = function(a) { wealth <<- wealth + a },
     # Opposite of the function above (decreases the wealth)
     bidRejected = function(d) { wealth <<- wealth - d },
-    # Consitutes the bidding strategy of the bidder, ensures eventual termination of the hypothesis test
+    # Constitutes the bidding strategy of the bidder, ensures eventual termination of the hypothesis test
     bid = function()  { ifelse(wealth >= const, const, wealth) }  
   )
 }
@@ -241,7 +241,7 @@ makeRawSource <- function(ncolumns) {
         nactive      = sum(!is.na(activeColumns[-1]))
       )
     },
-    # Ouputs currents position and updates the position
+    # Outputs currents position and updates the position
     generateFeature = function() {
       # Updates previous with output prevPosition
       prevPosition  <<- position
@@ -353,7 +353,7 @@ nulls = runif(nNull)
 # Null hypothesis false
 nonNulls = runif(nNonNull, 0, .05)
 
-# Permutate pvalues
+# Permuting pvalues
 pvals = sample(c(nulls, nonNulls)) 
 
 # Set wealth, called "omega"
@@ -364,11 +364,11 @@ omega = .1
 expert = makeExpertGeom(length(pvals), wealth=omega, frac=.1)
 
 # making an empty list for the rejectedHyp
-# Updates everytime hypothesis is rejected.
+# Updates every time hypothesis is rejected.
 rejectedHyp = list()
 
 # setting pass to 1
-# Updates as algorithm cylces through pvalues.
+# Updates as algorithm cycles through pvalues.
 pass = 1
 
 # algorithm continues as long as there are remaining hypotheses to test and
@@ -389,7 +389,7 @@ while (!expert$finished() && expert$state()$wealth > 0) {
   }
   # Checks if there are remaining tests
   if(expert$finishedPass()) {
-    # Resets position from 0 to highest index in the contructor
+    # Resets position from 0 to highest index in the constructor
     expert$udPass()
     # Tracks number of current iteration.
     pass = pass+1
@@ -550,7 +550,7 @@ names(expertSC) <- c("const","geom")
 
 > Make  both  experts  from  the  part  d  use  a  single  wealth  object.   This will require you to create a separate wealth object that is passed to both of the bidders, and modify the bidder objects to change the wealth object appropriately.
 
-What we essentially did was take every function, get rid of the wealth in the state and rely on a wealth value in the global environment. 
+The main idea for our approach was to get rid of the wealth in the state function and rely on a wealth value in the global environment. Both `bidAccepted` and `bidRejected` functions already used the superassignment operator and it was therefore not necessary to change that aspect of the code.
 
 ```{r}
 # no more wealth in state
@@ -596,7 +596,7 @@ makeExpertSW <- function (bidder, constructor) {
 }
 
 # partial function application is not necessary anymore
-# we can simply pass the initalized function to our function
+# we can simply pass the initialized function to our function
 makeMultiExpertSW <- function(..., ncolumns) {
   output <- list()
   for (i in seq_along(list(...))) {
