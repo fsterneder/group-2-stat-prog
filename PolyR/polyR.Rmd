@@ -76,7 +76,7 @@ makeBidderConst = function(wealth=.05, const=.01) {
 
 ## makeRawSource
 
-This constructor handles the positions 
+This constructor handles the position of the hypotheses and coordinates where the test is conducted.
 
 ```{r eval=F}
 makeRawSource <- function(ncolumns) {
@@ -111,6 +111,8 @@ makeRawSource <- function(ncolumns) {
 
 ## makeExpert
 
+Takes a bidder and a constructor as input and outputs a list which is used to additionally handle the bidding and other important functions for the hypothesis testing.
+
 ```{r eval=F}
 makeExpert <- function (bidder, constructor) {
   list(
@@ -141,6 +143,8 @@ makeExpert <- function (bidder, constructor) {
 
 ## makeExpertGeom
 
+Takes `ncolumns` as mandatory input and outputs a new expert.
+
 ```{r eval=F}
 makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
   makeExpert(
@@ -152,104 +156,120 @@ makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
 
 ## environmentDrawing
 
+```{r}
+include_graphics("envir.png")
+```
+
+
 # Comment the code
 
 > Comment the code thoroughly. After part 1, you should understand how the code works.  Now comment it to help explain it to others.  Essentially every line should be commented. Remember, you aren’t explaining what the code does,  eg,  for line 42,  “ifelse checks the condition, bids wealth*frac if it holds, otherwise wealth.” Instead, explain why things are done as they are, eg, “ifelse statement ensures termination by eventually bidding remaining wealth”. Note that some things are worth explaining a bit of the how. For example, line 95, “+1 accounts for the zero at the beginning of the activeColumns vector”.
 
 ```{r results="hide"}
+# Creates a bidder with a geometric bidding strategy, therefore a fractional input can be specified. Also the wealth of the bidder is stored here..
 makeBidderGeom = function(wealth=.05, frac = .5) {
-#input of function has default values. If wealth and/or frac are not given, these values are used. 
-#list contains: list with state (saving input wealth, and frac as a list)
-#and 3 functions 
+  # Function outputs a list
   list( 
+    # Stores the wealth and frac in a function (see question 3)
     state = function() { 
+      # state outputs a list
       list(
+        # outputs the (updated) wealth value of the makeBidder env
         wealth = wealth,
+        # outputs the (updated) frac value of the makeBidder env
         frac   = frac
       ) 
     },
-    #these functions change the (initial) wealth of the parent environment
-    #bidAccepted increases the wealth
+    # When a bid was accepted it takes the value of the bid and increments wealth by this value
     bidAccepted = function(a) { wealth <<- wealth + a },
-    #bidRejected decreases the wealth
+    # Opposite of the function above (decreases the wealth)
     bidRejected = function(d) { wealth <<- wealth - d },
-    #at the end, the bidfunction is called, which either returns the wealth, or the wealth*frac
+    # Consitutes the bidding strategy of the bidder, ensures eventual termination of the hypothesis test
     bid = function()  { ifelse(wealth > .0001, wealth*frac, wealth) }
   )
 }
 
+# Creates a bidder with a constant bidding strategy
 makeBidderConst = function(wealth=.05, const=.01) {
-#this function has again default values. It is the same as the one before, only the bid-function differs. 
+  # Function outputs a list
   list( 
+    # Stores the wealth and frac in a function (see question 3)
     state = function() { 
+      # state outputs a list
       list(
+        # outputs the (updated) wealth value of the makeBidder env
         wealth  = wealth,
+        # outputs the (updated) frac value of the makeBidder env
         const   = const
       ) 
     },
-    #these functions change the (initial) wealth of the parent environment
-    #bidAccepted increases the wealth
+    # When a bid was accepted it takes the value of the bid and increments wealth (value of makeBidder env) by this value
     bidAccepted = function(a) { wealth <<- wealth + a },
-    #bidRejected decreases the wealth
+    # Opposite of the function above (decreases the wealth)
     bidRejected = function(d) { wealth <<- wealth - d },
-    #at the end, the bidfunction is called, which either returns the wealth, or the const
+    # Consitutes the bidding strategy of the bidder, ensures eventual termination of the hypothesis test
     bid = function()  { ifelse(wealth >= const, const, wealth) }  
   )
 }
 
+# Constructor which takes ncolumns (length of all possible tests) as input
 makeRawSource <- function(ncolumns) {
-#this function has one input variable, the number of columns.
-#It creates 4 variables and a list (containing the variable name and 4 functions, see comments there)
-
-#every column is stored as an active column (WHY DOES IT START WITH 0?)
+  # vector of positions we could test and a safety zero position
   activeColumns  = 0:ncolumns
-  #a positions variable is made for ??
-  #position will be changed in generateFeature-function
+  # current position of the test
   position       = ncolumns
-  #the previous position is NA at the beginning (will be changed with following generateFeature-function))
+  # previous position of the test
   prevPosition   = NA
+  # number of remaining tests
   nactive        = ncolumns
   
+  # function outputs a list
   list(
-    #creating a name variable
+    # name
     name = "Marginal",
-    #first function:
+    # Stores various position parameters (see question 3)
     state = function() {
+      # Function outputs a list
       list(
-      #the list stores the variables like before, except the nactive changes.
-      #the importance of this list and function creating it will be explained in "Why a list?"
+        # Current position of the test
         position     = position, 
+        # Previous position of the test
         prevPosition = prevPosition,
+        # Vector of positions we could test and a safety zero position
         active       = activeColumns,
-        #the first active column is dropped, then the sum (checking for NAs before) is computed
+        # Number of remaining tests
         nactive      = sum(!is.na(activeColumns[-1]))
       )
     },
-    #second function:
+    # Ouputs currents position and updates the position
     generateFeature = function() {
-    #here the positions are changed. With <<- we change the prevPosition and position variable in the parent environment
+      # Updates previous with output prevPosition
       prevPosition  <<- position
+      # moves position from current down to the next position (non NA) 
       position      <<- max(activeColumns[activeColumns < position], na.rm=T)
+      # outputs current Position
       return(prevPosition) 
     },
-    #third function:
+    # Function to keep track of the non-rejected values (called when hypothesis is rejected)
     dropLastFeature = function() { 
-    #this adds another column at the end, making it NA? (if generateFeature is done before)
+      # Decrement the activeColumns
       activeColumns[prevPosition+1] <<- NA 
       },
-    #fourth function:
+    # Resets the position values after a passed test
     udPass = function() {
-    #new position is the last column (with highest (index) number)
+      # 
       position <<- max(activeColumns, na.rm=T)
-      #prevPosition gets NA, to avoid errors if you forget to change it when doing a new round?
+      # Resets prevPosition
       prevPosition <<- NA
     }
   )
 }
 
+#makeExpert takes the bidder and the constructor and coordinates the two. Both have to be given. 
 makeExpert <- function (bidder, constructor) {
-#this function takes two variables, a bidder and a constructor. They have to be given. 
+  
 #it creates a list, containing the name ("Geom"), the bidder, constructor and 8 functions. 
+  
   list(
     #creating a name variable
     name         = "Geom",
@@ -258,7 +278,8 @@ makeExpert <- function (bidder, constructor) {
     #constructor is the given constructor (in our case: makeRawSource)
     constructor  = constructor,
     
-    #Function 1:
+    #keeps track of current wealth and position. Wealth is taken 
+    #the bidder, while the current position is taken from the constructor. 
     state        = function() { 
       list(
         #takes the wealth from the bidder
@@ -267,38 +288,42 @@ makeExpert <- function (bidder, constructor) {
         position = constructor$state()$position
       )
     },
-    #Function 2:
+    
     #calls the bid function from (in our case) makeBidder(Geom/Const)
-    # --> what is changed?
+    #bid creates a "shortcut" to the bid function of bidder. We can thus call 
+    #bid right away without having to call bidder first
     bid          = function() { bidder$bid() },
-    #Function 3:
-    #calls the generateFeature function from (in our case) makeRawSource
-    # --> what is changed?
+    
+    #Shortcut to the generateFeature function from (in our case) makeRawSource
     feature      = function() { constructor$generateFeature() },
-    #Function 4:
-    #checks the position in state of makeRawSource, T if 0, else --> F
+    
+    #checks if position in state of makeRawSource is 0. Needed later as a 
+    #condition for udPass 
     finishedPass = function() { constructor$state()$position == 0 },
-    #Function 5:
-    #checks the nactive in state of makeRawSource, T if 0, else --> F
+    
+    #checks if nactive is 0. If True algorithm is terminated
     finished     = function() { constructor$state()$nactive == 0 },
-    #Function 6:
-    #takes an argument a
+    
+    #Shortcut to bidAccepted and dropLastFeature. If pvalue is rejected,
+    #algorithm will skip it in further iterations.
     passTest     = function(a) {
       #calls the bidAccepted function to increase the wealth
       bidder$bidAccepted(a)
       #calls the dropLastFeature 
       constructor$dropLastFeature() 
     },
-    #Function 7:
-    #takes argument payment, makeBidder-bidRejected function with payment
-    #wealth is decreased by payment
+    
+    #Reduce wealth by bid amount. Shortcut.
     pay          = function(payment) {bidder$bidRejected(payment) },
-    #Function 8:
-    #changes position and prevPosition
+    
+    
+    #Shortcut. If current position is 0 the algorithm restarts at the 
+    #non-rejected pvalue with the highest index. 
     udPass       = function() { constructor$udPass() }
   )
 }
 
+#Shortcut to makeExpert.
 makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
 #this function takes the number of columns, and optional the wealth and frac. 
 #it calls the makeExpert function above, with 
@@ -313,32 +338,60 @@ makeExpertGeom <- function(ncolumns, wealth=.05, frac=.5) {
 }
 
 #setting example data
-seed = 421232
+#make experiment repeatable
+seed = 421232 
 set.seed(seed) 
+
+#Defines number of hypotheses tested
 nNull = 20; nNonNull = 20
+
+#vector of (pseudo)randomly generated values between 0 and 1. 
+#Null hypothesis is true
 nulls = runif(nNull)
+
+#vector of (pseudo)randomly generated values between 0 and .05. 
+#Null hypothesis false
 nonNulls = runif(nNonNull, 0, .05)
+
+#Permutate pvalues
 pvals = sample(c(nulls, nonNulls)) 
 
+#Set wealth, called "omega"
 omega = .1
+
 #making an expert, with ncolumns = length(pvals), wealth and frac
+#expert is assigned makeExpertGeom() object.
 expert = makeExpertGeom(length(pvals), wealth=omega, frac=.1)
+
 #making an empty list for the rejectedHyp
+#Updates everytime hypothesis is rejected.
 rejectedHyp = list()
+
 #setting pass to 1
+#Updates as algorithm cylces through pvalues.
 pass = 1
 
-#run as long as ... 
+#algorithm continues as long as there are remaining hypotheses to test and
+#wealth is not depleted
 while (!expert$finished() && expert$state()$wealth > 0) {
+  #Index of current hypothesis test
   index = expert$feature()
+  #returns current bid
   bid = expert$bidder$bid()
+  #decreases wealth by amount of bid
   expert$pay(bid)
+  #Tests if hypothesis can be rejected
   if (pvals[index] < bid) {
+    #adjusts wealth by omega
     expert$passTest(omega)
+    #adds index of rejected hypothesis to list rejectedHyp as a list element
     rejectedHyp[[1+length(rejectedHyp)]] = index
   }
+  #Checks if there are remaining tests
   if(expert$finishedPass()) {
+    #resets position from 0 to highest index in the contructor
     expert$udPass()
+    #tracks number of current iteration.
     pass = pass+1
   }
 }
@@ -350,7 +403,7 @@ pvals[unlist(rejectedHyp)]
 
 > The state function returns the values of the private variables.  Why is this a function that returns a list and not just a list of the values of the private variables?
 
-If it would be a list the values wouldn't update and would only return the values at the initialization of the parent function. Let's take our bidder function and see how that works practice.
+If it was a list the values wouldn't update and would only return the values at the initialization of the parent function. Let's take our bidder function and see how that works practice.
 
 ```{r}
 makeBidderGeomNoFun = function(wealth=.05, frac = .5) {
@@ -368,10 +421,13 @@ makeBidderGeomNoFun = function(wealth=.05, frac = .5) {
 Again, the only difference to our old bidder function is that the state is now a list instead of a function. 
 
 ```{r}
+# Set number of iterations for while loop
 setn = 5
+# With function
 testA <- makeBidderGeom()
+# Without function
 testB <- makeBidderGeomNoFun()
-
+#Returns list of outputs. 
 state <- 
   function() {
     list(
@@ -422,18 +478,13 @@ There are many functional packages that provide partial function application but
 ## Example
 
 ```{r}
-seed = 421232
-set.seed(seed) 
-nNull = 20; nNonNull = 20
-nulls = runif(nNull)
-nonNulls = runif(nNonNull, 0, .05)
-pvals = sample(c(nulls, nonNulls)) 
-omega = .1
-
+# Bidder Constant
 expertConst = partial(makeBidderConst, const=.1)
+# Bidder Geom
 expertGeom  = partial(makeBidderGeom,  frac=.1)
 expert = makeMultiExpert(expertConst, expertGeom, ncolumns=length(pvals), wealth=omega/2)
 names(expert) <- c("const","geom")
+#To have consistent expert names
 expert$const$name = "Const"
 
 for(i in seq_along(expert)){
